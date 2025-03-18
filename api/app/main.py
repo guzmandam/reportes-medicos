@@ -42,8 +42,6 @@ async def login(user_credentials: UserLogin):
     # Convert user object to dict and remove sensitive data
     user_dict = user.model_dump()
     user_dict.pop("hashed_password", None)
-
-    print(user_dict)    
     
     # Ensure id is present and correctly formatted
     if "_id" in user_dict:
@@ -187,7 +185,6 @@ async def create_role(role: RoleCreate, current_user: User = Depends(get_current
     
     role_dict = role.model_dump()
     result = roles.insert_one(role_dict)
-    print(type(result.inserted_id), type(result.inserted_id.__str__()))
     # Properly convert ObjectId to string
     role_dict["id"] = str(result.inserted_id)
     return Role(**role_dict)

@@ -1,36 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import Optional, List, Dict
-from datetime import datetime
 from enum import Enum
-
-class UserBase(BaseModel):
-    email: str
-    full_name: str
-    role: str = "user"
-
-class UserCreate(UserBase):
-    password: str
-
-class UserLogin(BaseModel):
-    email: str
-    password: str
-
-class UserInDB(UserBase):
-    hashed_password: str
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    is_active: bool = True
-
-class User(UserBase):
-    id: Optional[str] = Field(None, alias="id")
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    is_active: bool = True
-
-class Token(BaseModel):
-    access_token: str
-    token_type: str
-
-class TokenData(BaseModel):
-    email: Optional[str] = None
 
 class Resource(str, Enum):
     USERS = "users"
@@ -39,6 +9,7 @@ class Resource(str, Enum):
     APPOINTMENTS = "appointments"
     ANALYTICS = "analytics"
     SETTINGS = "settings"
+    DOCUMENTS = "documents"
 
 class Action(str, Enum):
     CREATE = "create"
@@ -56,7 +27,7 @@ class Role(BaseModel):
     name: str
     description: str
     permissions: Dict[Resource, List[Action]]
-    is_system_role: bool = False  # To identify default system roles that cannot be deleted
+    is_system_role: bool = False
 
 class RoleCreate(BaseModel):
     name: str

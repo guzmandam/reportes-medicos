@@ -1,131 +1,131 @@
-# Medical Records Platform
+# Plataforma de Registros Médicos
 
-A modern, secure, and user-friendly medical records management system built with Next.js, TypeScript, and Tailwind CSS.
+Un sistema moderno, seguro y fácil de usar para la gestión de registros médicos, construido con Next.js, TypeScript y Tailwind CSS.
 
-## Features
+## Características
 
-- 🔐 Secure authentication and role-based access control
-- 👥 User management with different roles (admin, doctor, nurse)
-- 📋 Patient records management
-- 📅 Appointment scheduling
-- 📊 Analytics and reporting
-- 🌓 Light/Dark mode support
-- 📱 Responsive design
-- 🔒 Role-based permissions system
+- 🔐 Autenticación segura y control de acceso basado en roles
+- 👥 Gestión de usuarios con diferentes roles (administrador, médico, enfermero)
+- 📋 Gestión de registros de pacientes
+- 📅 Programación de citas
+- 📊 Análisis y reportes
+- 🌓 Soporte para modo claro/oscuro
+- 📱 Diseño responsivo
+- 🔒 Sistema de permisos basado en roles
 
-## Tech Stack
+## Stack Tecnológico
 
 - **Framework**: Next.js 15.1.0
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS
-- **UI Components**: 
+- **Lenguaje**: TypeScript
+- **Estilos**: Tailwind CSS
+- **Componentes UI**: 
   - Radix UI
   - Shadcn/ui
   - Hero Icons
-- **State Management**: React Context
-- **Form Handling**: React Hook Form with Zod validation
-- **HTTP Client**: Axios
-- **Date Handling**: date-fns
-- **Charts**: Recharts
-- **Notifications**: React Hot Toast
-- **Authentication**: Custom implementation with JWT
+- **Gestión de Estado**: React Context
+- **Manejo de Formularios**: React Hook Form con validación Zod
+- **Cliente HTTP**: Axios
+- **Manejo de Fechas**: date-fns
+- **Gráficos**: Recharts
+- **Notificaciones**: React Hot Toast
+- **Autenticación**: Implementación personalizada con JWT
 
-## Prerequisites
+## Prerrequisitos
 
-- Node.js 18.x or later
-- npm or yarn package manager
+- Node.js 18.x o superior
+- npm o yarn como gestor de paquetes
 
-## Getting Started
+## Comenzando
 
-1. Clone the repository:
+1. Clonar el repositorio:
    ```bash
-   git clone [repository-url]
+   git clone [url-del-repositorio]
    cd medical-records-platform
    ```
 
-2. Install dependencies:
+2. Instalar dependencias:
    ```bash
    npm install
-   # or
+   # o
    yarn install
    ```
 
-3. Set up environment variables:
-   Create a `.env.local` file in the root directory with the following variables:
+3. Configurar variables de entorno:
+   Crear un archivo `.env.local` en el directorio raíz con las siguientes variables:
    ```
-   NEXT_PUBLIC_API_URL=your_api_url
+   NEXT_PUBLIC_API_URL=tu_url_api
    ```
 
-4. Run the development server:
+4. Ejecutar el servidor de desarrollo:
    ```bash
    npm run dev
-   # or
+   # o
    yarn dev
    ```
 
-5. Open [http://localhost:3000](http://localhost:3000) in your browser.
+5. Abrir [http://localhost:3000](http://localhost:3000) en tu navegador.
 
-## Project Structure
+## Estructura del Proyecto
 
 ```
 medical-records-platform/
-├── app/                    # Next.js app directory
-│   ├── (auth)/            # Authentication routes
-│   ├── (dashboard)/       # Dashboard routes
-│   ├── api/               # API routes
-│   └── layout.tsx         # Root layout
-├── components/            # Reusable components
-├── contexts/             # React contexts
-├── hooks/                # Custom React hooks
-├── lib/                  # Utility functions and configurations
-├── public/              # Static assets
-├── styles/              # Global styles
-└── types/               # TypeScript type definitions
+├── app/                    # Directorio de la aplicación Next.js
+│   ├── (auth)/            # Rutas de autenticación
+│   ├── (dashboard)/       # Rutas del panel de control
+│   ├── api/               # Rutas de la API
+│   └── layout.tsx         # Layout principal
+├── components/            # Componentes reutilizables
+├── contexts/             # Contextos de React
+├── hooks/                # Hooks personalizados de React
+├── lib/                  # Funciones y configuraciones de utilidad
+├── public/              # Activos estáticos
+├── styles/              # Estilos globales
+└── types/               # Definiciones de tipos TypeScript
 ```
 
-## Available Scripts
+## Scripts Disponibles
 
-- `npm run dev` - Start development server
-- `npm run build` - Build for production
-- `npm run start` - Start production server
-- `npm run lint` - Run ESLint
+- `npm run dev` - Iniciar servidor de desarrollo
+- `npm run build` - Construir para producción
+- `npm run start` - Iniciar servidor de producción
+- `npm run lint` - Ejecutar ESLint
 
-## Authentication
+## Autenticación
 
-The application uses a custom authentication system with JWT tokens. Users can be assigned different roles:
-- Admin: Full system access
-- Doctor: Access to patient records and appointments
-- Nurse: Limited access to patient records
+La aplicación utiliza un sistema de autenticación personalizado con tokens JWT. Los usuarios pueden ser asignados a diferentes roles:
+- Administrador: Acceso completo al sistema
+- Médico: Acceso a registros de pacientes y citas
+- Enfermero: Acceso limitado a registros de pacientes
 
-## Role-Based Access Control
+## Control de Acceso Basado en Roles
 
-The system implements a comprehensive role-based access control (RBAC) system with the following resources:
-- Users
-- Patients
-- Medical Records
-- Appointments
-- Analytics
-- Settings
+El sistema implementa un sistema completo de control de acceso basado en roles (RBAC) con los siguientes recursos:
+- Usuarios
+- Pacientes
+- Registros Médicos
+- Citas
+- Análisis
+- Configuraciones
 
-Each role can be assigned specific permissions for these resources.
+Cada rol puede ser asignado permisos específicos para estos recursos.
 
-## Contributing
+## Contribuir
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+1. Hacer fork del repositorio
+2. Crear tu rama de características (`git checkout -b feature/caracteristica-increible`)
+3. Confirmar tus cambios (`git commit -m 'Agregar alguna característica increible'`)
+4. Subir a la rama (`git push origin feature/caracteristica-increible`)
+5. Abrir un Pull Request
 
-## License
+## Licencia
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+Este proyecto está licenciado bajo la Licencia MIT - ver el archivo LICENSE para más detalles.
 
-## Support
+## Soporte
 
-For support, please contact [support contact information].
+Para soporte, por favor contacta a [información de contacto de soporte].
 
-## Acknowledgments
+## Agradecimientos
 
 - [Next.js](https://nextjs.org/)
 - [Tailwind CSS](https://tailwindcss.com/)

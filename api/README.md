@@ -1,132 +1,139 @@
-# Medical Records API
+# API de Registros Médicos
 
-A FastAPI-based REST API for managing medical records, documents, and patient information with role-based access control.
+Una API REST basada en FastAPI para gestionar registros médicos, documentos e información de pacientes con control de acceso basado en roles.
 
-## Project Structure
+## Estructura del Proyecto
 
 ```
 api/
 ├── app/
 │   ├── api/
 │   │   └── api_v1/
-│   │       ├── auth/         # Authentication endpoints
-│   │       ├── documents/    # Document management endpoints
-│   │       ├── patients/     # Patient management endpoints
-│   │       ├── roles/        # Role management endpoints
-│   │       └── users/        # User management endpoints
+│   │       ├── auth/         # Endpoints de autenticación
+│   │       ├── documents/    # Endpoints de gestión de documentos
+│   │       ├── patients/     # Endpoints de gestión de pacientes
+│   │       ├── roles/        # Endpoints de gestión de roles
+│   │       └── users/        # Endpoints de gestión de usuarios
 │   ├── core/
-│   │   ├── config.py        # Application configuration
-│   │   ├── database.py      # Database connection
-│   │   ├── dependencies.py  # FastAPI dependencies
-│   │   ├── init_db.py       # Database initialization
-│   │   └── security.py      # Security utilities
-│   ├── models/              # Pydantic models
-│   └── utils/               # Utility functions
-├── tests/                   # Test files
-├── .env                     # Environment variables
-├── requirements.txt         # Project dependencies
-└── run.py                  # Application entry point
+│   │   ├── config.py        # Configuración de la aplicación
+│   │   ├── database.py      # Conexión a la base de datos
+│   │   ├── dependencies.py  # Dependencias de FastAPI
+│   │   ├── init_db.py       # Inicialización de la base de datos
+│   │   └── security.py      # Utilidades de seguridad
+│   ├── models/              # Modelos Pydantic
+│   └── utils/               # Funciones de utilidad
+├── tests/                   # Archivos de prueba
+├── .env                     # Variables de entorno
+├── requirements.txt         # Dependencias del proyecto
+└── run.py                  # Punto de entrada de la aplicación
 ```
 
-## Features
+## Características
 
-- **Authentication & Authorization**
-  - JWT-based authentication
-  - Role-based access control
-  - User management
+- **Autenticación y Autorización**
+  - Autenticación basada en JWT
+  - Control de acceso basado en roles
+  - Gestión de usuarios
 
-- **Document Management**
-  - Document upload and storage
-  - Automatic document analysis
-  - Document status tracking
-  - Extracted data management
+- **Gestión de Documentos**
+  - Carga y almacenamiento de documentos
+  - Análisis automático de documentos
+  - Seguimiento del estado de documentos
+  - Gestión de datos extraídos
 
-- **Patient Management**
-  - Patient record creation and updates
-  - Patient information extraction from documents
-  - Medical history tracking
+- **Gestión de Pacientes**
+  - Creación y actualización de registros de pacientes
+  - Extracción de información de pacientes desde documentos
+  - Seguimiento del historial médico
 
-- **Role Management**
-  - Role-based permissions
-  - Resource and action management
-  - Admin-only role operations
+- **Gestión de Roles**
+  - Permisos basados en roles
+  - Gestión de recursos y acciones
+  - Operaciones exclusivas para administradores
 
-## API Endpoints
+## Endpoints de la API
 
-### Authentication
-- `POST /api/v1/auth/login` - User login
-- `POST /api/v1/auth/signup` - User registration
-- `POST /api/v1/auth/token` - Get access token
+### Autenticación
+- `POST /api/v1/auth/login` - Inicio de sesión
+- `POST /api/v1/auth/signup` - Registro de usuario
+- `POST /api/v1/auth/token` - Obtener token de acceso
 
-### Users
-- `GET /api/v1/users/me` - Get current user
-- `GET /api/v1/users/` - List all users (admin only)
-- `GET /api/v1/users/{user_id}` - Get user by ID (admin only)
-- `POST /api/v1/users/` - Create new user (admin only)
-- `DELETE /api/v1/users/{user_id}` - Delete user (admin only)
+### Usuarios
+- `GET /api/v1/users/me` - Obtener usuario actual
+- `GET /api/v1/users/` - Listar todos los usuarios (solo admin)
+- `GET /api/v1/users/{user_id}` - Obtener usuario por ID (solo admin)
+- `POST /api/v1/users/` - Crear nuevo usuario (solo admin)
+- `DELETE /api/v1/users/{user_id}` - Eliminar usuario (solo admin)
 
-### Documents
-- `POST /api/v1/documents/upload` - Upload new document
-- `GET /api/v1/documents/` - List documents
-- `GET /api/v1/documents/{document_id}` - Get document by ID
-- `GET /api/v1/documents/{document_id}/analyze` - Trigger document analysis
-- `GET /api/v1/documents/{document_id}/extracted-data` - Get extracted data
+### Documentos
+- `POST /api/v1/documents/upload` - Subir nuevo documento
+- `GET /api/v1/documents/` - Listar documentos
+- `GET /api/v1/documents/{document_id}` - Obtener documento por ID
+- `GET /api/v1/documents/{document_id}/analyze` - Activar análisis de documento
+- `GET /api/v1/documents/{document_id}/extracted-data` - Obtener datos extraídos
 
-### Patients
-- `POST /api/v1/patients/` - Create new patient
-- `GET /api/v1/patients/` - List all patients
-- `GET /api/v1/patients/{patient_id}` - Get patient by ID
-- `PUT /api/v1/patients/{patient_id}` - Update patient
-- `POST /api/v1/patients/from-document/{document_id}` - Create patient from document
+### Pacientes
+- `POST /api/v1/patients/` - Crear nuevo paciente
+- `GET /api/v1/patients/` - Listar todos los pacientes
+- `GET /api/v1/patients/{patient_id}` - Obtener paciente por ID
+- `PUT /api/v1/patients/{patient_id}` - Actualizar paciente
+- `POST /api/v1/patients/from-document/{document_id}` - Crear paciente desde documento
 
 ### Roles
-- `GET /api/v1/roles/` - List all roles (admin only)
-- `GET /api/v1/roles/{role_id}` - Get role by ID (admin only)
-- `POST /api/v1/roles/` - Create new role (admin only)
-- `GET /api/v1/roles/resources/list` - List available resources and actions
+- `GET /api/v1/roles/` - Listar todos los roles (solo admin)
+- `GET /api/v1/roles/{role_id}` - Obtener rol por ID (solo admin)
+- `POST /api/v1/roles/` - Crear nuevo rol (solo admin)
+- `GET /api/v1/roles/resources/list` - Listar recursos y acciones disponibles
 
-## Setup and Installation
+## Configuración e Instalación
 
-1. Create a virtual environment:
+1. Crear un entorno virtual:
    ```bash
    python -m venv venv
-   source venv/bin/activate  # On Windows: venv\Scripts\activate
+   source venv/bin/activate  # En Windows: venv\Scripts\activate
    ```
 
-2. Install dependencies:
+2. Instalar dependencias:
    ```bash
    pip install -r requirements.txt
    ```
 
-3. Create a `.env` file with the following variables:
+3. Crear un archivo `.env` con las siguientes variables:
    ```
-   MONGODB_URL=your_mongodb_url
-   JWT_SECRET_KEY=your_jwt_secret
+   MONGODB_URL=tu_url_mongodb
+   JWT_SECRET_KEY=tu_jwt_secret
    JWT_ALGORITHM=HS256
    ACCESS_TOKEN_EXPIRE_MINUTES=30
    ```
 
-4. Run the application:
+4. Ejecutar la aplicación:
    ```bash
    python run.py
    ```
 
-## Database
+## Base de Datos
 
-The application uses MongoDB as its database. The database will be automatically initialized with default roles and an admin user on first startup.
+La aplicación utiliza MongoDB como base de datos. La base de datos se inicializará automáticamente con roles predeterminados y un usuario administrador al primer inicio.
 
-## Security
+## Seguridad
 
-- JWT-based authentication
-- Password hashing using bcrypt
-- Role-based access control
-- Secure file upload handling
-- Environment variable configuration
+- Autenticación basada en JWT
+- Hash de contraseñas usando bcrypt
+- Control de acceso basado en roles
+- Manejo seguro de carga de archivos
+- Configuración mediante variables de entorno
 
-## Development
+## Desarrollo
 
-The project follows a modular structure with clear separation of concerns:
-- Models: Data validation and serialization
-- Core: Application configuration and utilities
-- API: Route handlers and business logic
-- Utils: Helper functions and shared code
+El proyecto sigue una estructura modular con clara separación de responsabilidades:
+- Models: Validación y serialización de datos
+- Core: Configuración y utilidades de la aplicación
+- API: Manejadores de rutas y lógica de negocio
+- Utils: Funciones de utilidad y código compartido
+
+## Pruebas
+
+Las pruebas se encuentran en el directorio `tests/`. Ejecutar pruebas usando:
+```bash
+pytest
+``` 

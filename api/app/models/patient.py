@@ -4,16 +4,17 @@ from datetime import datetime
 from enum import Enum
 
 class Gender(str, Enum):
-    MALE = "male"
-    FEMALE = "female"
-    OTHER = "other"
+    MALE = "Masculino"
+    FEMALE = "Femenino"
+    OTHER = "Otro"
 
 class PatientBase(BaseModel):
     names: str
-    first_lastname: str
-    second_lastname: str
-    date_of_birth: datetime
+    paternal_lastname: str
+    maternal_lastname: str
+    date_of_birth: str
     him: str # Hospital Identification Number (ID)
+    gender: Gender
     #gender: Gender
     #id_number: Optional[str] = None
     #address: Optional[str] = None
@@ -28,10 +29,8 @@ class Patient(PatientBase):
     id: Optional[str] = Field(None, alias="id")
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
-    medical_history: Optional[List[str]] = None
-    allergies: Optional[List[str]] = None
-    medications: Optional[List[str]] = None
-    
+    doctors: Optional[List[str]] = None # Professional Certificate Number of each doctor that has attended the patient
+
 class PatientUpdate(BaseModel):
     full_name: Optional[str] = None
     date_of_birth: Optional[datetime] = None

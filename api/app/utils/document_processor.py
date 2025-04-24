@@ -11,11 +11,11 @@ class StructuredData(BaseModel):
     patient: dict
     doctor: dict
     note: dict
-    signos_vitales: dict
-    diagnosticos_activos: dict
-    ordenes_dieteticas: dict
-    ordenes_enfermeria: dict
-    medicamentos_hospitalarios: dict
+    vital_signs: dict
+    active_diagnostics: dict
+    dietetic_orders: dict
+    nursing_orders: dict
+    prescriptions: dict
 
 class DocumentProcessor:
     """
@@ -125,6 +125,7 @@ class DocumentProcessor:
             "Nombres": header_footer.get("Nombres", ""),
             "FechaNacimiento": header_footer.get("Fecha_nacimiento", ""),
             "Sexo": header_footer.get("Sexo", ""),
+            "HIM": header_footer.get("HIM", "")
         }
 
         self.med_info = {
@@ -178,11 +179,11 @@ class DocumentProcessor:
             patient=self.patient_info,
             doctor=self.med_info,
             note=self.note_info,
-            signos_vitales=self.signos_vitales,
-            diagnosticos_activos=self.diagnostico_activo,
-            ordenes_dieteticas=self.ordenes_dieteticas,
-            ordenes_enfermeria=self.ordenes_enfermeria,
-            medicamentos_hospitalarios=self.medicamentos_hospitalarios,
+            vital_signs=self.signos_vitales,
+            active_diagnostics=self.diagnostico_activo,
+            dietetic_orders=self.ordenes_dieteticas,
+            nursing_orders=self.ordenes_enfermeria,
+            prescriptions=self.medicamentos_hospitalarios,
         )
 
         return structured_data

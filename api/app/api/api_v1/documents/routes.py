@@ -5,46 +5,165 @@ import shutil
 from datetime import datetime
 from bson import ObjectId
 
-from ....models.document import Document, DocumentCreate, DocumentStatus, DocumentType, DocumentAnalysisResult, DocumentExtractedData
+from ....models.document import (
+    Document, 
+    DocumentCreate, 
+    DocumentStatus, 
+    DocumentType, 
+    DocumentAnalysisResult, 
+    DocumentExtractedData
+)
+from ....models.patient import (
+    PatientCreate,
+    Patient,
+    Gender
+)
+
 from ....core.dependencies import get_current_active_user
-from ....core.database import documents_collection, patients_collection
+from ....core.database import (
+    documents_collection, 
+    patients_collection, 
+    vital_signs_collection, 
+    dietetic_orders_collection, 
+    prescriptions_collection,
+    notes_collection
+)
 from ....core.config import get_settings
-from ....utils.document_processor import DocumentProcessor
+from ....utils.document_processor import (
+    DocumentProcessor,
+    StructuredData,
+)
 
 router = APIRouter()
 settings = get_settings()
 
-# Mock function for document analysis - this would be replaced with actual OCR/ML logic
-async def analyze_document_background(document_id: str):
-    """Background task for document analysis"""
-    # Get the document from database
-    doc = documents_collection.find_one({"_id": ObjectId(document_id)})
-    if not doc:
-        # Document not found
-        return
+def format_date(date: Optional[str], hour: Optional[str]) -> datetime:
+    if date and hour:
+        return datetime.strptime(f"{date} {hour}", "%d/%m/%Y %H:%M")
+    elif date:
+        return datetime.strptime(date, "%d/%m/%Y")
+    else:
+        return None
+
+async def create_patient(patient_data: dict):
+    """Create a new patient"""
+    gender_value = patient_data.get("Sexo", "").lower()
+    gender = Gender.MALE
+    if gender_value == "femenino" or gender_value == "f":
+        gender = Gender.FEMALE
+    elif gender_value != "masculino" and gender_value != "m":
+        gender = Gender.OTHER
     
-    try:
-        # Process document using our utility function
-        file_path = doc.get("file_path")
-        document_processor = DocumentProcessor(file_path)
-        extracted_data = await document_processor.analyze()
-        
-        # Update document with extracted data
-        documents_collection.update_one(
-            {"_id": ObjectId(document_id)},
-            {
-                "$set": {
-                    "status": DocumentStatus.ANALYZED.value,
-                    "analyzed_at": datetime.utcnow(),
-                    "extracted_data": extracted_data
-                }
-            }
-        )
-    except Exception as e:
-        print
+    patient_create = PatientCreate(
+        names=patient_data.get("Nombres", ""),
+        paternal_lastname=patient_data.get("ApellidoPaterno", ""),
+        maternal_lastname=patient_data.get("ApellidoMaterno", ""),
+        date_of_birth=patient_data.get("FechaNacimiento", ""),
+        him=patient_data.get("HIM", None),
+        gender=gender
+    )
+    
+    patient = Patient(
+        **patient_create.dict(), 
+        created_at=datetime.utcnow(), 
+        updated_at=datetime.utcnow(),
+        doctors=[]
+    )
+    result = patients_collection.insert_one(patient.dict(exclude={"id"}))
+    return str(result.inserted_id)
+
+async def add_doctor_to_patient(patient_id: str, professional_certificate: str, sign_date: Optional[datetime]):
+    """Add a doctor to a patient"""
+    patients_collection.update_one(
+        {"_id": ObjectId(patient_id)},
+        {"$push": {"doctors": {"professional_certificate": professional_certificate, "sign_date": sign_date}}}
+    )
+
+async def create_vital_signs(patient_id: str, note_id: str, vital_signs_data: dict):
+    """Create vital signs for a patient"""
+    inserted_vital_signs = {
+        "patient_id": patient_id,
+        "note_id": note_id,
+        "data": vital_signs_data,
+        "created_at": datetime.utcnow()
+    }
+    vital_signs_collection.insert_one(inserted_vital_signs)
+
+async def create_prescriptions(patient_id: str, note_id: str, prescriptions_data: dict):
+    """Create prescriptions for a patient"""
+    inserted_prescriptions = {
+        "patient_id": patient_id,
+        "note_id": note_id,
+        "data": prescriptions_data,
+        "created_at": datetime.utcnow()
+    }
+    prescriptions_collection.insert_one(inserted_prescriptions)
+
+async def create_dietetic_orders(patient_id: str, note_id: str, dietetic_orders_data: dict):
+    """Create dietetic orders for a patient"""
+    inserted_dietetic_orders = {
+        "patient_id": patient_id,
+        "note_id": note_id,
+        "data": dietetic_orders_data,
+        "created_at": datetime.utcnow()
+    }
+    dietetic_orders_collection.insert_one(inserted_dietetic_orders)
+
+async def create_note(patient_id: str, note_data: dict):
+    """Create a note for a patient"""
+    inserted_note = {
+        "patient_id": patient_id,
+        "created_at": datetime.utcnow(),
+        **note_data
+    }
+    notes_collection.insert_one(inserted_note)
+    return str(inserted_note["_id"])
+
+async def analyze_document_background(extracted_data: StructuredData):
+    """Background task for document analysis"""
+    patient_data = extracted_data.patient
+    doctor_data = extracted_data.doctor
+    note_data = extracted_data.note
+    vital_signs_data = extracted_data.vital_signs
+    dietetic_orders_data = extracted_data.dietetic_orders
+    prescriptions_data = extracted_data.prescriptions
+
+    patient_him = patient_data.get("HIM", None)
+
+    if not (existing_patient := patients_collection.find_one({"him": patient_him})):    
+        patient_id = await create_patient(patient_data)
+    else:
+        patient_id = str(existing_patient["_id"])
+
+    # Create note
+    note_id = await create_note(patient_id, note_data)
+
+    # Add doctor to patient
+    doctor_professional_certificate = doctor_data.get("CedulaProfesional", None)
+    doctor_sign_date = doctor_data.get("FechaCreacion", None)
+    doctor_sign_hour = doctor_data.get("HoraCreacion", None)
+
+    doctor_sign_datetime = format_date(doctor_sign_date, doctor_sign_hour)
+
+    await add_doctor_to_patient(patient_id, doctor_professional_certificate, doctor_sign_datetime)
+
+    # Create vital signs
+    vital_signs_data = vital_signs_data.get("Tabla", [])
+    await create_vital_signs(patient_id, note_id, vital_signs_data)
+
+    # Create dietetic orders
+    dietetic_orders_data = dietetic_orders_data.get("Tabla", [])
+    await create_dietetic_orders(patient_id, note_id, dietetic_orders_data)
+
+    # Create prescriptions
+    prescriptions_data = prescriptions_data.get("Tabla", [])
+    await create_prescriptions(patient_id, note_id, prescriptions_data)
+
+    return patient_id
 
 @router.post("/test-upload-process")
 async def test_document_processing(
+    background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
 ):
     """
@@ -72,10 +191,13 @@ async def test_document_processing(
         document_processor = DocumentProcessor(file_path)
         extracted_data = await document_processor.analyze()
         
+        # Add as background task
+        background_tasks.add_task(analyze_document_background, extracted_data)
+        
         # Return the structured data
         return {
             "success": True,
-            "message": "Document processed successfully",
+            "message": "Document processed successfully and patient processing queued in background",
             "extracted_data": extracted_data
         }
     except Exception as e:
@@ -137,8 +259,12 @@ async def upload_document(
     result = documents_collection.insert_one(document)
     document_id = str(result.inserted_id)
     
-    # Queue background processing
-    background_tasks.add_task(analyze_document_background, document_id)
+    # Process the document and extract data
+    document_processor = DocumentProcessor(file_path)
+    extracted_data = await document_processor.analyze()
+    
+    # Queue background processing with extracted data
+    background_tasks.add_task(analyze_document_background, extracted_data)
     
     # Update status to processing
     documents_collection.update_one(
@@ -214,8 +340,20 @@ async def analyze_document(
     if not doc:
         raise HTTPException(status_code=404, detail="Document not found")
     
-    # Queue background processing
-    background_tasks.add_task(analyze_document_background, document_id)
+    # Process the document
+    file_path = doc.get("file_path")
+    if not file_path or not os.path.exists(file_path):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Document file not found"
+        )
+    
+    # Process the document and extract data
+    document_processor = DocumentProcessor(file_path)
+    extracted_data = await document_processor.analyze()
+    
+    # Queue background processing with extracted data
+    background_tasks.add_task(analyze_document_background, extracted_data)
     
     # Update status to processing
     documents_collection.update_one(
@@ -226,7 +364,7 @@ async def analyze_document(
     return {
         "document_id": document_id,
         "success": True,
-        "extracted_data": {},
+        "extracted_data": extracted_data,
         "error_message": None
     }
 

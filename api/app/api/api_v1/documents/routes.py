@@ -9,7 +9,7 @@ from ....models.document import Document, DocumentCreate, DocumentStatus, Docume
 from ....core.dependencies import get_current_active_user
 from ....core.database import documents_collection, patients_collection
 from ....core.config import get_settings
-from ....utils.document_processor import process_document
+from ....utils.document_processor import DocumentProcessor
 
 router = APIRouter()
 settings = get_settings()
@@ -26,7 +26,8 @@ async def analyze_document_background(document_id: str):
     try:
         # Process document using our utility function
         file_path = doc.get("file_path")
-        extracted_data = await process_document(file_path)
+        document_processor = DocumentProcessor(file_path)
+        extracted_data = await document_processor.analyze()
         
         # Update document with extracted data
         documents_collection.update_one(
@@ -40,16 +41,53 @@ async def analyze_document_background(document_id: str):
             }
         )
     except Exception as e:
-        # Update document status to failed if an error occurs
-        documents_collection.update_one(
-            {"_id": ObjectId(document_id)},
-            {
-                "$set": {
-                    "status": DocumentStatus.FAILED.value,
-                    "error_message": str(e)
-                }
-            }
+        print
+
+@router.post("/test-upload-process")
+async def test_document_processing(
+    file: UploadFile = File(...),
+):
+    """
+    Test endpoint to process a document and return structured data immediately
+    without saving to database. Useful for testing the document processor.
+    """
+    # Create a temporary file to store the uploaded document
+    upload_dir = os.path.join(os.getcwd(), "temp_uploads")
+    os.makedirs(upload_dir, exist_ok=True)
+    
+    # Create a unique filename
+    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+    filename = f"{timestamp}_{file.filename}"
+    file_path = os.path.join(upload_dir, filename)
+    
+    try:
+        # Save the uploaded file
+        # Make sure to reset the file cursor position
+        file.file.seek(0)
+        
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        
+        # Process the document
+        document_processor = DocumentProcessor(file_path)
+        extracted_data = await document_processor.analyze()
+        
+        # Return the structured data
+        return {
+            "success": True,
+            "message": "Document processed successfully",
+            "extracted_data": extracted_data
+        }
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error processing document: {str(e)}"
         )
+    finally:
+        # Clean up the temporary file
+        if os.path.exists(file_path):
+            os.remove(file_path)
+
 
 @router.post("/upload", response_model=Document)
 async def upload_document(

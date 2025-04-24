@@ -41,7 +41,7 @@ export default function RolesPage() {
 
   const fetchResources = async () => {
     try {
-      const response = await api.get('/resources')
+      const response = await api.get('/roles/resources/list')
       setResources(response.data)
     } catch (error) {
       console.error('Error fetching resources:', error)
@@ -123,8 +123,8 @@ export default function RolesPage() {
     <div className="min-h-screen bg-white p-6">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Role Management</h1>
-          <p className="mt-2 text-gray-600">Manage user roles and their permissions</p>
+          <h1 className="text-3xl font-bold text-gray-900">Gestión de Roles</h1>
+          <p className="mt-2 text-gray-600">Administrar roles de usuario y sus permisos</p>
         </div>
         
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -141,7 +141,7 @@ export default function RolesPage() {
                   className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-black hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500"
                   disabled={isLoading}
                 >
-                  Create New Role
+                  Crear Nuevo Rol
                 </button>
               </div>
               <div className="space-y-4">
@@ -163,14 +163,14 @@ export default function RolesPage() {
                         className="inline-flex items-center px-3 py-1.5 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                         disabled={isLoading || role.is_system_role}
                       >
-                        Edit
+                        Editar
                       </button>
                       <button
                         onClick={() => openDeleteModal(role)}
                         className="inline-flex items-center px-3 py-1.5 border border-transparent text-sm font-medium rounded-md text-red-700 bg-red-50 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                         disabled={role.is_system_role || isLoading}
                       >
-                        Delete
+                        Eliminar
                       </button>
                     </div>
                   </div>
@@ -184,7 +184,7 @@ export default function RolesPage() {
             <div className="bg-white rounded-lg shadow-sm border border-gray-200">
               <div className="p-6">
                 <h2 className="text-xl font-semibold text-gray-900 mb-6">
-                  {selectedRole ? 'Edit Role' : 'Create Role'}
+                  {selectedRole ? 'Editar Rol' : 'Crear Rol'}
                 </h2>
                 <RoleEditor
                   role={selectedRole}
@@ -217,9 +217,9 @@ export default function RolesPage() {
       {showDeleteModal && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Confirm Deletion</h3>
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Confirmar Eliminación</h3>
             <p className="text-gray-600 mb-6">
-              Are you sure you want to delete the role "{roleToDelete?.name}"? This action cannot be undone.
+              ¿Está seguro que desea eliminar el rol "{roleToDelete?.name}"? Esta acción no se puede deshacer.
             </p>
             <div className="flex justify-end space-x-3">
               <button
@@ -227,14 +227,14 @@ export default function RolesPage() {
                 className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                 disabled={isLoading}
               >
-                Cancel
+                Cancelar
               </button>
               <button
                 onClick={handleDeleteRole}
                 className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
                 disabled={isLoading}
               >
-                {isLoading ? 'Deleting...' : 'Delete'}
+                {isLoading ? 'Eliminando...' : 'Eliminar'}
               </button>
             </div>
           </div>
@@ -312,7 +312,7 @@ function RoleEditor({ role, resources, isLoading, onSave, onCancel }: RoleEditor
       className="space-y-6"
     >
       <div>
-        <label className="block text-sm font-medium text-gray-700">Name</label>
+        <label className="block text-sm font-medium text-gray-700">Nombre</label>
         <input
           type="text"
           value={formData.name}
@@ -324,7 +324,7 @@ function RoleEditor({ role, resources, isLoading, onSave, onCancel }: RoleEditor
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700">Description</label>
+        <label className="block text-sm font-medium text-gray-700">Descripción</label>
         <textarea
           value={formData.description}
           onChange={(e) => setFormData({ ...formData, description: e.target.value })}
@@ -336,7 +336,7 @@ function RoleEditor({ role, resources, isLoading, onSave, onCancel }: RoleEditor
       </div>
 
       <div>
-        <h3 className="text-sm font-medium text-gray-700 mb-4">Permissions</h3>
+        <h3 className="text-sm font-medium text-gray-700 mb-4">Permisos</h3>
         <div className="space-y-4">
           {resources.map((resource) => (
             <div key={resource.name} className="p-4 bg-gray-50 rounded-lg border border-gray-200">
@@ -371,14 +371,14 @@ function RoleEditor({ role, resources, isLoading, onSave, onCancel }: RoleEditor
           className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
           disabled={isLoading}
         >
-          Cancel
+          Cancelar
         </button>
         <button
           type="submit"
           className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
           disabled={isLoading}
         >
-          {isLoading ? 'Saving...' : 'Save'}
+          {isLoading ? 'Guardando...' : 'Guardar'}
         </button>
       </div>
     </form>

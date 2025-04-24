@@ -7,28 +7,28 @@ export default function HistoryPage() {
   return (
     <div className="flex flex-col gap-8">
       <div>
-        <h1 className="text-3xl font-bold">File History</h1>
-        <p className="text-muted-foreground">View and manage previously uploaded medical records</p>
+        <h1 className="text-3xl font-bold">Historial de Archivos</h1>
+        <p className="text-muted-foreground">Ver y gestionar registros médicos previamente cargados</p>
       </div>
 
       <div className="flex justify-between items-center">
         <div className="flex gap-2">
           <Button variant="outline">
             <Filter className="mr-2 h-4 w-4" />
-            Filter
+            Filtrar
           </Button>
-          <Button variant="outline">Past 30 days</Button>
+          <Button variant="outline">Últimos 30 días</Button>
         </div>
         <Button variant="outline">
           <Download className="mr-2 h-4 w-4" />
-          Export Report
+          Exportar Informe
         </Button>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Upload History</CardTitle>
-          <CardDescription>All files uploaded to the platform with processing status</CardDescription>
+          <CardTitle>Historial de Cargas</CardTitle>
+          <CardDescription>Todos los archivos cargados a la plataforma con estado de procesamiento</CardDescription>
         </CardHeader>
         <CardContent>
           <FileHistory />

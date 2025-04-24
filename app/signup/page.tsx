@@ -9,12 +9,12 @@ export default function SignupPage() {
       <div className="max-w-md w-full space-y-8">
         <div>
           <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            Create a new account
+            Crear una nueva cuenta
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Or{' '}
+            O{' '}
             <Link href="/login" className="font-medium text-black hover:text-gray-500">
-              sign in to your account
+              iniciar sesión en su cuenta
             </Link>
           </p>
         </div>

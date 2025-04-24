@@ -18,9 +18,14 @@ class DocumentStatus(str, Enum):
     FAILED = "failed"
 
 class DocumentBase(BaseModel):
-    title: str
-    document_type: DocumentType
-    notes: Optional[str] = None
+    note_number: str
+    note_type: str #DocumentType
+    record_number: Optional[str] = None
+    him: Optional[str] = None
+    hospital: Optional[str] = None
+    admission_date: Optional[str] = None
+    admission_time: Optional[str] = None
+    discharge_time: Optional[str] = None
 
 class DocumentCreate(DocumentBase):
     patient_id: Optional[str] = None  # Can be linked to a patient later

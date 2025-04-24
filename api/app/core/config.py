@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     mongodb_name: str = "medical_records"  # Default value since not in .env
     jwt_secret_key: str
     jwt_algorithm: str = "HS256"
-    access_token_expire_minutes: int = 30
+    access_token_expire_minutes: int = 1000
     
     # Add more configuration variables as needed
     project_name: str = "Medical Records API"

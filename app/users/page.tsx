@@ -17,30 +17,30 @@ export default function UsersPage() {
     >
       <div className="flex flex-col gap-8">
         <div>
-          <h1 className="text-3xl font-bold">User Management</h1>
-          <p className="text-muted-foreground">Manage user roles and permissions</p>
+          <h1 className="text-3xl font-bold">Gestión de Usuarios</h1>
+          <p className="text-muted-foreground">Gestionar roles y permisos de usuarios</p>
         </div>
 
         <div className="flex justify-between items-center">
           <div className="flex">
-            <Button variant="outline">All Users</Button>
+            <Button variant="outline">Todos los Usuarios</Button>
           </div>
           <div className="flex gap-2">
             <Button variant="outline">
               <Download className="mr-2 h-4 w-4" />
-              Export
+              Exportar
             </Button>
             <Button>
               <UserPlus className="mr-2 h-4 w-4" />
-              Add User
+              Añadir Usuario
             </Button>
           </div>
         </div>
 
         <Card>
           <CardHeader>
-            <CardTitle>Users & Permissions</CardTitle>
-            <CardDescription>Manage system access and user roles</CardDescription>
+            <CardTitle>Usuarios y Permisos</CardTitle>
+            <CardDescription>Gestionar acceso al sistema y roles de usuario</CardDescription>
           </CardHeader>
           <CardContent>
             <UserManagement />

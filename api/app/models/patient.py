@@ -9,14 +9,17 @@ class Gender(str, Enum):
     OTHER = "other"
 
 class PatientBase(BaseModel):
-    full_name: str
+    names: str
+    first_lastname: str
+    second_lastname: str
     date_of_birth: datetime
-    gender: Gender
-    id_number: Optional[str] = None
-    address: Optional[str] = None
-    phone: Optional[str] = None
-    email: Optional[EmailStr] = None
-    emergency_contact: Optional[str] = None
+    him: str # Hospital Identification Number (ID)
+    #gender: Gender
+    #id_number: Optional[str] = None
+    #address: Optional[str] = None
+    #phone: Optional[str] = None
+    #email: Optional[EmailStr] = None
+    #emergency_contact: Optional[str] = None
     
 class PatientCreate(PatientBase):
     pass

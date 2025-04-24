@@ -9,8 +9,8 @@ const Charts = dynamic(() => import('@/components/analytics/charts'), {
     <div className="grid gap-4 md:grid-cols-2">
       <Card>
         <CardHeader>
-          <CardTitle>Patient Growth</CardTitle>
-          <CardDescription>Monthly patient registration trends</CardDescription>
+          <CardTitle>Crecimiento de Pacientes</CardTitle>
+          <CardDescription>Tendencias mensuales de registro de pacientes</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="h-[300px] animate-pulse bg-muted rounded-lg" />
@@ -18,8 +18,8 @@ const Charts = dynamic(() => import('@/components/analytics/charts'), {
       </Card>
       <Card>
         <CardHeader>
-          <CardTitle>File Processing</CardTitle>
-          <CardDescription>Monthly file processing volume</CardDescription>
+          <CardTitle>Procesamiento de Archivos</CardTitle>
+          <CardDescription>Volumen mensual de procesamiento de archivos</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="h-[300px] animate-pulse bg-muted rounded-lg" />
@@ -27,8 +27,8 @@ const Charts = dynamic(() => import('@/components/analytics/charts'), {
       </Card>
       <Card className="md:col-span-2">
         <CardHeader>
-          <CardTitle>Daily Activity</CardTitle>
-          <CardDescription>File uploads and downloads this week</CardDescription>
+          <CardTitle>Actividad Diaria</CardTitle>
+          <CardDescription>Cargas y descargas de archivos esta semana</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="h-[300px] animate-pulse bg-muted rounded-lg" />
@@ -42,7 +42,7 @@ export default function AnalyticsPage() {
   return (
     <div className="flex flex-col gap-8">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold">Analytics</h1>
+        <h1 className="text-3xl font-bold">Análisis</h1>
       </div>
       <Charts />
     </div>

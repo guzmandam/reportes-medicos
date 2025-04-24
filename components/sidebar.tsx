@@ -19,25 +19,25 @@ import {
 const routes = [
   {
     path: "/",
-    name: "Dashboard",
+    name: "Panel de Control",
     icon: HomeIcon,
     allowedRoles: ['admin', 'doctor', 'nurse', 'receptionist', 'user']
   },
   {
     path: "/patients",
-    name: "Patients",
+    name: "Pacientes",
     icon: FolderIcon,
     allowedRoles: ['admin', 'doctor', 'nurse', 'receptionist']
   },
   {
     path: "/history",
-    name: "History",
+    name: "Historial",
     icon: ChartBarIcon,
     allowedRoles: ['admin', 'doctor', 'nurse', 'receptionist', 'user']
   },
   {
     path: "/users",
-    name: "Users",
+    name: "Usuarios",
     icon: UsersIcon,
     allowedRoles: ['admin']
   },
@@ -49,7 +49,7 @@ const routes = [
   },
   {
     path: "/settings",
-    name: "Settings",
+    name: "Configuración",
     icon: Cog6ToothIcon,
     allowedRoles: ['admin']
   },
@@ -69,7 +69,7 @@ export default function Sidebar() {
   return (
     <div className="flex h-screen w-64 flex-col border-r bg-gray-50/40">
       <div className="p-6">
-        <h2 className="text-lg font-semibold">Medical Records</h2>
+        <h2 className="text-lg font-semibold">Registros Médicos</h2>
       </div>
       <ScrollArea className="flex-1">
         <div className="space-y-1 p-2">
@@ -106,7 +106,7 @@ export default function Sidebar() {
             onClick={logout}
           >
             <ArrowLeftOnRectangleIcon className="h-5 w-5" />
-            Sign Out
+            Cerrar Sesión
           </Button>
         </div>
       </div>

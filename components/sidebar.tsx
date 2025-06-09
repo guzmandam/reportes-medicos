@@ -29,12 +29,12 @@ const routes = [
     icon: FolderIcon,
     allowedRoles: ['admin', 'doctor', 'nurse', 'receptionist']
   },
-  {
-    path: "/history",
-    name: "Historial",
-    icon: ChartBarIcon,
-    allowedRoles: ['admin', 'doctor', 'nurse', 'receptionist', 'user']
-  },
+  // {
+  //   path: "/history",
+  //   name: "Historial",
+  //   icon: ChartBarIcon,
+  //   allowedRoles: ['admin', 'doctor', 'nurse', 'receptionist', 'user']
+  // },
   {
     path: "/users",
     name: "Usuarios",

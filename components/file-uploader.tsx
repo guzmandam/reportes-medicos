@@ -6,7 +6,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 import { useToast } from "@/hooks/use-toast"
-import { Upload, X, CheckCircle, AlertCircle } from "lucide-react"
+import { Upload, X, CheckCircle, AlertCircle, FileText } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
 import api from "@/lib/axios"
 
@@ -52,12 +52,12 @@ export function FileUploader() {
     })
 
     try {
-      // Create form data with the file
+      // Create form data with just the file
       const formData = new FormData()
       formData.append('file', fileWithStatus.file)
             
-      // Use the existing backend API endpoint
-      const apiUrl = '/documents/test-upload-process'
+      // Use the upload endpoint
+      const apiUrl = '/documents/upload'
       
       // Use the global API instance for the upload with progress tracking
       const response = await api.post(apiUrl, formData, {
@@ -83,32 +83,33 @@ export function FileUploader() {
           ...updated[index], 
           status: 'success', 
           progress: 100,
-          uploadId: response.data.uploadId
+          uploadId: response.data.id
         }
         return updated
       })
       
       toast({
         title: "Archivo subido con éxito",
-        description: `${fileWithStatus.file.name} ha sido procesado correctamente.`,
+        description: `${fileWithStatus.file.name} ha sido procesado correctamente. Los datos se están extrayendo automáticamente.`,
       })
       
       return response.data
-    } catch (error) {
+    } catch (error: any) {
       // Update status to error
+      const errorMessage = error?.response?.data?.detail || error?.message || 'Error desconocido'
       setFiles(prev => {
         const updated = [...prev]
         updated[index] = { 
           ...updated[index], 
           status: 'error', 
-          error: error instanceof Error ? error.message : 'Error desconocido'
+          error: errorMessage
         }
         return updated
       })
       
       toast({
         title: "Error al subir el archivo",
-        description: `No se pudo subir ${fileWithStatus.file.name}: ${error instanceof Error ? error.message : 'Error desconocido'}`,
+        description: `No se pudo subir ${fileWithStatus.file.name}: ${errorMessage}`,
         variant: "destructive",
       })
       
@@ -175,10 +176,11 @@ export function FileUploader() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
+      {/* File Upload Area */}
       <div
-        className={`border-2 border-dashed rounded-lg p-6 text-center ${
-          files.length > 0 ? "border-border" : "border-primary/20"
+        className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+          files.length > 0 ? "border-border" : "border-primary/20 hover:border-primary/40"
         }`}
       >
         <input
@@ -191,33 +193,76 @@ export function FileUploader() {
           disabled={uploading}
         />
         <label htmlFor="file-upload" className="flex flex-col items-center justify-center cursor-pointer">
-          <Upload className="h-10 w-10 text-muted-foreground mb-2" />
-          <h3 className="text-lg font-medium">Arrastre archivos aquí o haga clic para explorar</h3>
-          <p className="text-sm text-muted-foreground mt-1">
-            Suba registros médicos en PDF, resultados de laboratorio u otros documentos de pacientes
+          <Upload className="h-12 w-12 text-muted-foreground mb-4" />
+          <h3 className="text-xl font-medium mb-2">Arrastre archivos aquí o haga clic para explorar</h3>
+          <p className="text-muted-foreground mb-2">
+            Suba registros médicos para procesamiento automático
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Formatos soportados: PDF, JPEG, PNG (.pdf, .jpg, .jpeg, .png)
           </p>
         </label>
       </div>
 
+      {/* Info Card */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="flex items-start space-x-3">
+          <FileText className="h-5 w-5 text-blue-600 mt-0.5" />
+          <div>
+            <h4 className="text-sm font-medium text-blue-800">Procesamiento Automático</h4>
+            <p className="text-sm text-blue-700 mt-1">
+              Los archivos se procesarán automáticamente para extraer información del paciente, datos médicos, 
+              prescripciones y otra información relevante. No necesita ingresar metadatos manualmente.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Files List */}
       {files.length > 0 && (
         <div className="space-y-4">
-          <div className="text-sm font-medium">Archivos Seleccionados ({files.length})</div>
-          <div className="space-y-2 max-h-40 overflow-y-auto">
+          <div className="flex items-center justify-between">
+            <div className="text-sm font-medium">Archivos Seleccionados ({files.length})</div>
+            <Button 
+              className="h-9" 
+              onClick={handleUpload} 
+              disabled={uploading || files.every(f => f.status === 'success')}
+            >
+              {uploading ? 'Subiendo...' : 'Subir Archivos'}
+            </Button>
+          </div>
+          
+          <div className="space-y-3 max-h-96 overflow-y-auto">
             {files.map((fileWithStatus, index) => (
               <div
                 key={`${fileWithStatus.file.name}-${index}`}
-                className="flex flex-col bg-muted/50 rounded-md p-2"
+                className="flex items-center justify-between bg-muted/50 rounded-lg p-4"
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2 truncate">
-                    <div className="flex-shrink-0 h-9 w-9 bg-primary/10 rounded flex items-center justify-center">
-                      <span className="text-xs">{fileWithStatus.file.name.split(".").pop()?.toUpperCase()}</span>
-                    </div>
-                    <div className="truncate flex-1 min-w-0">
-                      <p className="text-sm font-medium truncate">{fileWithStatus.file.name}</p>
-                      <p className="text-xs text-muted-foreground">{(fileWithStatus.file.size / 1024 / 1024).toFixed(2)} MB</p>
-                    </div>
+                <div className="flex items-center space-x-3 flex-1 min-w-0">
+                  <div className="flex-shrink-0 h-10 w-10 bg-primary/10 rounded-lg flex items-center justify-center">
+                    <span className="text-xs font-medium">
+                      {fileWithStatus.file.name.split(".").pop()?.toUpperCase()}
+                    </span>
                   </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{fileWithStatus.file.name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {(fileWithStatus.file.size / 1024 / 1024).toFixed(2)} MB
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center space-x-3">
+                  {fileWithStatus.status !== 'idle' && (
+                    <div className="flex items-center space-x-2">
+                      {getStatusIcon(fileWithStatus.status)}
+                      <span className="text-xs font-medium">{getStatusText(fileWithStatus.status)}</span>
+                      {fileWithStatus.status === 'uploading' && (
+                        <span className="text-xs text-muted-foreground">{fileWithStatus.progress}%</span>
+                      )}
+                    </div>
+                  )}
+                  
                   <Button
                     variant="ghost"
                     size="icon"
@@ -228,34 +273,31 @@ export function FileUploader() {
                     <X className="h-4 w-4" />
                   </Button>
                 </div>
-                
-                {fileWithStatus.status !== 'idle' && (
-                  <div className="mt-2">
-                    <div className="flex items-center justify-between mb-1">
-                      <div className="flex items-center gap-1 text-xs">
-                        {getStatusIcon(fileWithStatus.status)}
-                        <span>{getStatusText(fileWithStatus.status)}</span>
-                        {fileWithStatus.error && (
-                          <span className="text-red-500">: {fileWithStatus.error}</span>
-                        )}
-                      </div>
-                      {fileWithStatus.status === 'uploading' && (
-                        <span className="text-xs">{fileWithStatus.progress}%</span>
-                      )}
-                    </div>
-                    <Progress value={fileWithStatus.progress} className="h-1" />
-                  </div>
-                )}
               </div>
             ))}
           </div>
-          <Button 
-            className="w-full" 
-            onClick={handleUpload} 
-            disabled={uploading || files.every(f => f.status === 'success')}
-          >
-            {uploading ? 'Subiendo...' : 'Subir Archivos'}
-          </Button>
+          
+          {/* Progress bars for uploading files */}
+          {files.some(f => f.status === 'uploading' || f.status === 'error') && (
+            <div className="space-y-2">
+              {files.map((fileWithStatus, index) => {
+                if (fileWithStatus.status === 'uploading' || fileWithStatus.status === 'error') {
+                  return (
+                    <div key={`progress-${index}`} className="space-y-1">
+                      <div className="flex justify-between text-xs">
+                        <span className="truncate max-w-[200px]">{fileWithStatus.file.name}</span>
+                        {fileWithStatus.error && (
+                          <span className="text-red-500">{fileWithStatus.error}</span>
+                        )}
+                      </div>
+                      <Progress value={fileWithStatus.progress} className="h-2" />
+                    </div>
+                  )
+                }
+                return null
+              })}
+            </div>
+          )}
         </div>
       )}
     </div>

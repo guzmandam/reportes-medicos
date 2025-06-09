@@ -119,7 +119,7 @@ async def create_note(patient_id: str, note_data: dict):
     notes_collection.insert_one(inserted_note)
     return str(inserted_note["_id"])
 
-async def analyze_document_background(extracted_data: StructuredData):
+async def analyze_document_background(extracted_data: StructuredData, document_id: str = None):
     """Background task for document analysis"""
     patient_data = extracted_data.patient
     doctor_data = extracted_data.doctor
@@ -134,6 +134,13 @@ async def analyze_document_background(extracted_data: StructuredData):
         patient_id = await create_patient(patient_data)
     else:
         patient_id = str(existing_patient["_id"])
+
+    # Update document with patient_id if document_id is provided
+    if document_id:
+        documents_collection.update_one(
+            {"_id": ObjectId(document_id)},
+            {"$set": {"patient_id": patient_id, "status": DocumentStatus.ANALYZED.value, "updated_at": datetime.utcnow()}}
+        )
 
     # Create note
     note_id = await create_note(patient_id, note_data)
@@ -163,12 +170,12 @@ async def analyze_document_background(extracted_data: StructuredData):
 
 @router.post("/test-upload-process")
 async def test_document_processing(
-    background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
 ):
     """
     Test endpoint to process a document and return structured data immediately
-    without saving to database. Useful for testing the document processor.
+    without saving to database or creating patient records. 
+    Useful for testing the document processor only.
     """
     # Create a temporary file to store the uploaded document
     upload_dir = os.path.join(os.getcwd(), "temp_uploads")
@@ -191,13 +198,10 @@ async def test_document_processing(
         document_processor = DocumentProcessor(file_path)
         extracted_data = await document_processor.analyze()
         
-        # Add as background task
-        background_tasks.add_task(analyze_document_background, extracted_data)
-        
-        # Return the structured data
+        # Return the structured data without creating patients or saving to DB
         return {
             "success": True,
-            "message": "Document processed successfully and patient processing queued in background",
+            "message": "Document processed successfully (test mode - no data saved)",
             "extracted_data": extracted_data
         }
     except Exception as e:
@@ -215,19 +219,9 @@ async def test_document_processing(
 async def upload_document(
     background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
-    title: str = Form(...),
-    document_type: DocumentType = Form(...),
-    notes: Optional[str] = Form(None),
-    patient_id: Optional[str] = Form(None),
     current_user: dict = Depends(get_current_active_user)
 ):
-    """Upload a new document (PDF) for processing"""
-    
-    # Check if patient exists if patient_id is provided
-    if patient_id:
-        patient = patients_collection.find_one({"_id": ObjectId(patient_id)})
-        if not patient:
-            raise HTTPException(status_code=404, detail="Patient not found")
+    """Upload a new document (PDF) for processing and automatic data extraction"""
     
     # Ensure upload directory exists
     upload_dir = os.path.join(os.getcwd(), "uploads")
@@ -238,47 +232,101 @@ async def upload_document(
     filename = f"{timestamp}_{file.filename}"
     file_path = os.path.join(upload_dir, filename)
     
-    # Save the uploaded file
-    with open(file_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-    
-    # Create document record
-    document = {
-        "title": title,
-        "document_type": document_type.value,
-        "notes": notes,
-        "file_path": file_path,
-        "uploaded_by": current_user["id"],
-        "patient_id": patient_id,
-        "status": DocumentStatus.PENDING.value,
-        "created_at": datetime.utcnow(),
-        "updated_at": datetime.utcnow()
-    }
-    
-    # Insert into database
-    result = documents_collection.insert_one(document)
-    document_id = str(result.inserted_id)
-    
-    # Process the document and extract data
-    document_processor = DocumentProcessor(file_path)
-    extracted_data = await document_processor.analyze()
-    
-    # Queue background processing with extracted data
-    background_tasks.add_task(analyze_document_background, extracted_data)
-    
-    # Update status to processing
-    documents_collection.update_one(
-        {"_id": result.inserted_id},
-        {"$set": {"status": DocumentStatus.PROCESSING.value}}
-    )
-    
-    # Fetch the updated document
-    doc = documents_collection.find_one({"_id": result.inserted_id})
-    doc["id"] = str(doc.pop("_id"))
-    
-    return doc
+    try:
+        # Save the uploaded file
+        # Make sure to reset the file cursor position
+        file.file.seek(0)
+        
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+        
+        # Process the document and extract data first
+        document_processor = DocumentProcessor(file_path)
+        extracted_data = await document_processor.analyze()
+        
+        # Extract metadata from the processed document
+        patient_data = extracted_data.patient if extracted_data.patient else {}
+        doctor_data = extracted_data.doctor if extracted_data.doctor else {}
+        note_data = extracted_data.note if extracted_data.note else {}
+        
+        # Generate title from patient info or use filename
+        title = file.filename
+        if patient_data.get("Nombres") and patient_data.get("ApellidoPaterno"):
+            title = f"Registro Médico - {patient_data.get('Nombres')} {patient_data.get('ApellidoPaterno')}"
+        
+        # Determine document type based on content (you can enhance this logic)
+        document_type = DocumentType.MEDICAL_RECORD.value  # Default
+        
+        # Generate notes from extracted data
+        notes_parts = []
+        if doctor_data.get("CedulaProfesional"):
+            notes_parts.append(f"Dr. Cédula: {doctor_data.get('CedulaProfesional')}")
+        if note_data.get("TipoNota"):
+            notes_parts.append(f"Tipo: {note_data.get('TipoNota')}")
+        notes = " | ".join(notes_parts) if notes_parts else None
+        
+        # Extract required document fields from processed data
+        note_number = note_data.get("NoNota", "N/A")
+        note_type = note_data.get("TipoNota", "Documento Médico")
+        record_number = note_data.get("NoExpediente", None)
+        him = patient_data.get("HIM", None)
+        hospital = note_data.get("Hospital", None)
+        admission_date = note_data.get("FechaIngreso", None)
+        admission_time = note_data.get("HoraIngreso", None)
+        discharge_time = note_data.get("HoraAlta", None)
+        
+        # Create document record with extracted metadata
+        document = {
+            "note_number": note_number,
+            "note_type": note_type,
+            "record_number": record_number,
+            "him": him,
+            "hospital": hospital,
+            "admission_date": admission_date,
+            "admission_time": admission_time,
+            "discharge_time": discharge_time,
+            "file_path": file_path,
+            "uploaded_by": current_user["id"],
+            "patient_id": None,  # Will be set after patient creation in background task
+            "status": DocumentStatus.PENDING.value,
+            "created_at": datetime.utcnow(),
+            "updated_at": datetime.utcnow()
+        }
+        
+        # Insert into database
+        result = documents_collection.insert_one(document)
+        document_id = str(result.inserted_id)
+        
+        # Update status to processing
+        documents_collection.update_one(
+            {"_id": result.inserted_id},
+            {"$set": {"status": DocumentStatus.PROCESSING.value}}
+        )
+        
+        # Queue background processing with extracted data
+        background_tasks.add_task(analyze_document_background, extracted_data, document_id)
+        
+        # Fetch the updated document
+        doc = documents_collection.find_one({"_id": result.inserted_id})
+        doc["id"] = str(doc.pop("_id"))
+        
+        return doc
+        
+    except Exception as e:
+        # Clean up the file if there was an error
+        if os.path.exists(file_path):
+            os.remove(file_path)
+        
+        # If document was created, remove it from database
+        if 'result' in locals():
+            documents_collection.delete_one({"_id": result.inserted_id})
+        
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error processing document: {str(e)}"
+        )
 
-@router.get("/", response_model=List[Document])
+@router.get("/")
 async def get_documents(
     status: Optional[DocumentStatus] = None,
     document_type: Optional[DocumentType] = None,

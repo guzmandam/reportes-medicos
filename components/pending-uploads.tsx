@@ -6,114 +6,49 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { Clock, Eye, FileText, Trash2, RefreshCw } from "lucide-react"
 import { useAuth } from "@/contexts/auth-context"
-import { FileWithStatus } from "./file-uploader"
+import api from "@/lib/axios"
+import { useToast } from "@/hooks/use-toast"
 
-// Define the upload record type
+// Define the upload record type based on backend Document model
 export interface UploadRecord {
   id: string
-  filename: string
-  uploadedAt: string
-  status: 'Queued' | 'Processing' | 'Analyzing' | 'Completed' | 'Failed'
-  fileSize: string
-  patientId?: string
-  patientName?: string
-  error?: string
+  note_number: string
+  note_type: string
+  record_number?: string
+  him?: string
+  hospital?: string
+  admission_date?: string
+  admission_time?: string
+  discharge_time?: string
+  file_path: string
+  uploaded_by: string
+  patient_id?: string
+  status: 'pending' | 'processing' | 'analyzed' | 'failed'
+  created_at: string
+  updated_at: string
+  analyzed_at?: string
+  extracted_data?: any
 }
-
-// Mock data - replace with API call later
-const mockUploads: UploadRecord[] = [
-  {
-    id: "UP-789456",
-    filename: "patient_records_089234.pdf",
-    uploadedAt: "2 hours ago",
-    status: "Queued",
-    fileSize: "8.2 MB",
-    patientId: "P-45678",
-    patientName: "Robert Johnson",
-  },
-  {
-    id: "UP-789457",
-    filename: "lab_results_2023_11_15.pdf",
-    uploadedAt: "3 hours ago",
-    status: "Processing",
-    fileSize: "4.7 MB",
-    patientId: "P-34521",
-    patientName: "Mary Williams",
-  },
-  {
-    id: "UP-789458",
-    filename: "ct_scan_report_08723.pdf",
-    uploadedAt: "4 hours ago",
-    status: "Analyzing",
-    fileSize: "12.3 MB",
-    patientId: "P-78923",
-    patientName: "James Martinez",
-  },
-  {
-    id: "UP-789459",
-    filename: "medical_history_complete.pdf",
-    uploadedAt: "1 day ago",
-    status: "Failed",
-    fileSize: "15.8 MB",
-    patientId: "P-12345",
-    patientName: "Sarah Chen",
-    error: "Formato de archivo no soportado"
-  },
-  {
-    id: "UP-789460",
-    filename: "prescription_records_2023.pdf",
-    uploadedAt: "1 day ago",
-    status: "Queued",
-    fileSize: "2.3 MB",
-    patientId: "P-67890",
-    patientName: "Michael Brown",
-  },
-]
 
 export function PendingUploads() {
   const { getToken } = useAuth()
-  const [uploads, setUploads] = useState<UploadRecord[]>(mockUploads)
+  const { toast } = useToast()
+  const [uploads, setUploads] = useState<UploadRecord[]>([])
   const [loading, setLoading] = useState(false)
-  const [recentUploads, setRecentUploads] = useState<FileWithStatus[]>([])
 
   // Function to fetch uploads from API
   const fetchUploads = async () => {
     setLoading(true)
     try {
-      // Get auth token
-      const token = await getToken()
-      
-      // Dummy API endpoint - replace with real endpoint later
-      const apiUrl = '/api/uploads'
-      
-      // In a real implementation, this would be an API call
-      // const response = await fetch(apiUrl, {
-      //   headers: {
-      //     'Authorization': `Bearer ${token}`
-      //   }
-      // })
-      // const data = await response.json()
-      // setUploads(data)
-      
-      // For now, we'll just simulate a delay
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      // Update the mock data with some random changes to simulate real-time updates
-      setUploads(prev => {
-        return prev.map(upload => {
-          // Randomly change some statuses to simulate processing
-          if (upload.status === 'Queued' && Math.random() > 0.7) {
-            return { ...upload, status: 'Processing' }
-          } else if (upload.status === 'Processing' && Math.random() > 0.7) {
-            return { ...upload, status: 'Analyzing' }
-          } else if (upload.status === 'Analyzing' && Math.random() > 0.7) {
-            return { ...upload, status: 'Completed' }
-          }
-          return upload
-        })
-      })
-    } catch (error) {
+      const response = await api.get('/documents/')
+      setUploads(response.data)
+    } catch (error: any) {
       console.error('Error fetching uploads:', error)
+      toast({
+        title: "Error al cargar documentos",
+        description: error?.response?.data?.detail || "No se pudieron cargar los documentos subidos.",
+        variant: "destructive",
+      })
     } finally {
       setLoading(false)
     }
@@ -123,43 +58,43 @@ export function PendingUploads() {
   const viewUpload = (id: string) => {
     // In a real implementation, this would navigate to a details page
     console.log('Viewing upload:', id)
+    // You could add navigation logic here, e.g.:
+    // router.push(`/documents/${id}`)
   }
 
   // Function to delete an upload
   const deleteUpload = async (id: string) => {
     try {
-      // Get auth token
-      const token = await getToken()
-      
-      // Dummy API endpoint - replace with real endpoint later
-      const apiUrl = `/api/uploads/${id}`
-      
-      // In a real implementation, this would be an API call
-      // await fetch(apiUrl, {
-      //   method: 'DELETE',
-      //   headers: {
-      //     'Authorization': `Bearer ${token}`
-      //   }
-      // })
+      // Note: You would need to implement a DELETE endpoint in the backend
+      // await api.delete(`/documents/${id}`)
       
       // For now, we'll just remove it from the state
       setUploads(prev => prev.filter(upload => upload.id !== id))
-    } catch (error) {
+      
+      toast({
+        title: "Documento eliminado",
+        description: "El documento ha sido eliminado correctamente.",
+      })
+    } catch (error: any) {
       console.error('Error deleting upload:', error)
+      toast({
+        title: "Error al eliminar",
+        description: error?.response?.data?.detail || "No se pudo eliminar el documento.",
+        variant: "destructive",
+      })
     }
   }
 
   // Function to get badge variant based on status
   const getBadgeVariant = (status: UploadRecord['status']) => {
     switch (status) {
-      case 'Queued':
+      case 'pending':
         return 'outline'
-      case 'Processing':
-      case 'Analyzing':
+      case 'processing':
         return 'secondary'
-      case 'Completed':
+      case 'analyzed':
         return 'default'
-      case 'Failed':
+      case 'failed':
         return 'destructive'
       default:
         return 'outline'
@@ -169,101 +104,161 @@ export function PendingUploads() {
   // Function to get status text in Spanish
   const getStatusText = (status: UploadRecord['status']) => {
     switch (status) {
-      case 'Queued':
-        return 'En Cola'
-      case 'Processing':
+      case 'pending':
+        return 'Pendiente'
+      case 'processing':
         return 'Procesando'
-      case 'Analyzing':
-        return 'Analizando'
-      case 'Completed':
-        return 'Completado'
-      case 'Failed':
-        return 'Fallido'
+      case 'analyzed':
+        return 'Analizado'
+      case 'failed':
+        return 'Error'
       default:
         return status
     }
   }
 
+  // Function to get document type text in Spanish
+  const getDocumentTypeText = (type: string) => {
+    switch (type) {
+      case 'medical_record':
+        return 'Registro Médico'
+      case 'lab_result':
+        return 'Resultado de Laboratorio'
+      case 'prescription':
+        return 'Prescripción'
+      case 'discharge_summary':
+        return 'Resumen de Alta'
+      case 'referral':
+        return 'Referencia'
+      case 'other':
+        return 'Otro'
+      default:
+        return type
+    }
+  }
+
+  // Function to format date
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffInHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60))
+    
+    if (diffInHours < 1) {
+      return 'Hace menos de 1 hora'
+    } else if (diffInHours < 24) {
+      return `Hace ${diffInHours} hora${diffInHours > 1 ? 's' : ''}`
+    } else {
+      const diffInDays = Math.floor(diffInHours / 24)
+      if (diffInDays === 1) {
+        return 'Ayer'
+      } else if (diffInDays < 7) {
+        return `Hace ${diffInDays} día${diffInDays > 1 ? 's' : ''}`
+      } else {
+        return date.toLocaleDateString('es-ES', { 
+          year: 'numeric', 
+          month: 'short', 
+          day: 'numeric' 
+        })
+      }
+    }
+  }
+
+  // Function to get filename from file_path
+  const getFileName = (filePath: string) => {
+    return filePath.split('/').pop() || 'Archivo'
+  }
+
+  // Initial fetch
+  useEffect(() => {
+    fetchUploads()
+  }, [])
+
   // Refresh uploads periodically
   useEffect(() => {
-    // Initial fetch
-    fetchUploads()
-    
-    // Set up interval for periodic refresh
     const interval = setInterval(fetchUploads, 30000) // Refresh every 30 seconds
-    
-    // Clean up interval on unmount
     return () => clearInterval(interval)
   }, [])
 
   return (
-    <div>
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-lg font-medium">Cargas Recientes</h3>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={fetchUploads} 
-          disabled={loading}
-        >
+    <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Clock className="h-4 w-4" />
+          <span className="text-sm text-muted-foreground">
+            {loading ? 'Cargando...' : `${uploads.length} documento${uploads.length !== 1 ? 's' : ''}`}
+          </span>
+        </div>
+        <Button variant="outline" size="sm" onClick={fetchUploads} disabled={loading}>
           <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
           Actualizar
         </Button>
       </div>
-      
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Nombre del Archivo</TableHead>
-            <TableHead>Paciente</TableHead>
-            <TableHead>Subido</TableHead>
-            <TableHead>Tamaño</TableHead>
-            <TableHead>Estado</TableHead>
-            <TableHead className="text-right">Acciones</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {uploads.length === 0 ? (
+
+      {uploads.length === 0 && !loading ? (
+        <div className="text-center py-8 text-muted-foreground">
+          <FileText className="h-12 w-12 mx-auto mb-4 opacity-50" />
+          <p>No hay documentos subidos aún</p>
+          <p className="text-sm">Los documentos que suba aparecerán aquí</p>
+        </div>
+      ) : (
+        <Table>
+          <TableHeader>
             <TableRow>
-              <TableCell colSpan={6} className="text-center py-6 text-muted-foreground">
-                No hay cargas pendientes
-              </TableCell>
+              <TableHead>Documento</TableHead>
+              <TableHead>Nota</TableHead>
+              <TableHead>Paciente</TableHead>
+              <TableHead>Estado</TableHead>
+              <TableHead>Subido</TableHead>
+              <TableHead className="text-right">Acciones</TableHead>
             </TableRow>
-          ) : (
-            uploads.map((upload) => (
+          </TableHeader>
+          <TableBody>
+            {uploads.map((upload) => (
               <TableRow key={upload.id}>
-                <TableCell className="font-medium">
-                  <div className="flex items-center gap-2">
-                    <FileText className="h-4 w-4 text-muted-foreground" />
-                    <span className="truncate max-w-[200px]">{upload.filename}</span>
-                  </div>
-                </TableCell>
                 <TableCell>
-                  {upload.patientName ? (
-                    <div>
-                      <div className="font-medium">{upload.patientName}</div>
-                      {upload.patientId && (
-                        <div className="text-xs text-muted-foreground">{upload.patientId}</div>
-                      )}
+                  <div className="flex items-center gap-3">
+                    <div className="flex-shrink-0 h-8 w-8 bg-primary/10 rounded flex items-center justify-center">
+                      <FileText className="h-4 w-4" />
                     </div>
-                  ) : (
-                    <span className="text-muted-foreground">No asignado</span>
-                  )}
-                </TableCell>
-                <TableCell>
-                  <div className="flex items-center">
-                    <Clock className="mr-1 h-3 w-3 text-muted-foreground" />
-                    <span>{upload.uploadedAt}</span>
+                    <div>
+                      <p className="font-medium">{getFileName(upload.file_path)}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {getDocumentTypeText(upload.note_type)}
+                      </p>
+                    </div>
                   </div>
                 </TableCell>
-                <TableCell>{upload.fileSize}</TableCell>
+                <TableCell>
+                  <div>
+                    <p className="text-sm font-medium">#{upload.note_number}</p>
+                    {upload.record_number && (
+                      <p className="text-xs text-muted-foreground">
+                        Exp: {upload.record_number}
+                      </p>
+                    )}
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <div>
+                    {upload.him ? (
+                      <div>
+                        <p className="text-sm font-medium">HIM: {upload.him}</p>
+                        {upload.hospital && (
+                          <p className="text-xs text-muted-foreground">{upload.hospital}</p>
+                        )}
+                      </div>
+                    ) : (
+                      <span className="text-sm text-muted-foreground">No asignado</span>
+                    )}
+                  </div>
+                </TableCell>
                 <TableCell>
                   <Badge variant={getBadgeVariant(upload.status)}>
                     {getStatusText(upload.status)}
                   </Badge>
-                  {upload.error && (
-                    <div className="text-xs text-red-500 mt-1">{upload.error}</div>
-                  )}
+                </TableCell>
+                <TableCell className="text-sm text-muted-foreground">
+                  {formatDate(upload.created_at)}
                 </TableCell>
                 <TableCell className="text-right">
                   <div className="flex justify-end gap-2">
@@ -276,10 +271,10 @@ export function PendingUploads() {
                   </div>
                 </TableCell>
               </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
+            ))}
+          </TableBody>
+        </Table>
+      )}
     </div>
   )
 }

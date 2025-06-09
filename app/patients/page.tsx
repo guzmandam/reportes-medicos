@@ -1,5 +1,5 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { PatientList } from "@/components/patient-list"
+import { PatientList } from "@/components/patient/patient-list"
 import { Button } from "@/components/ui/button"
 import { Download, Filter, Plus, Upload } from "lucide-react"
 

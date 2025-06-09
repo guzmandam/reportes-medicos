@@ -4,9 +4,20 @@ from datetime import datetime
 from bson import ObjectId
 
 from ....models.patient import Patient, PatientCreate, PatientUpdate, Gender
-from ....models.document import DocumentExtractedData, PatientInfo
+from ....models.document import DocumentExtractedData, PatientInfo, Document
+from ....models.medical_note import MedicalNote
+from ....models.prescription import Prescription
+from ....models.vital_signs import VitalSigns
+from ....models.dietetic_order import DietticOrder
 from ....core.dependencies import get_current_active_user
-from ....core.database import patients_collection, documents_collection
+from ....core.database import (
+    patients_collection, 
+    documents_collection,
+    notes_collection,
+    prescriptions_collection,
+    vital_signs_collection,
+    dietetic_orders_collection
+)
 
 router = APIRouter()
 
@@ -183,3 +194,164 @@ async def create_patient_from_document(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"Error creating patient from document: {str(e)}"
         )
+
+@router.get("/{patient_id}/notes", response_model=List[MedicalNote])
+async def get_patient_notes(
+    patient_id: str,
+    current_user: dict = Depends(get_current_active_user)
+):
+    """Get all medical notes for a specific patient"""
+    # Check if current user has permission
+    if current_user.get("role") not in ["admin", "doctor"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not enough permissions"
+        )
+    
+    # Check if patient exists
+    patient = patients_collection.find_one({"_id": ObjectId(patient_id)})
+    if not patient:
+        raise HTTPException(status_code=404, detail="Patient not found")
+    
+    notes_list = []
+    for note in notes_collection.find({"patient_id": patient_id}).sort("created_at", -1):
+        note["id"] = str(note.pop("_id"))
+        notes_list.append(note)
+    
+    return notes_list
+
+@router.get("/{patient_id}/prescriptions", response_model=List[Prescription])
+async def get_patient_prescriptions(
+    patient_id: str,
+    current_user: dict = Depends(get_current_active_user)
+):
+    """Get all prescriptions for a specific patient"""
+    # Check if current user has permission
+    if current_user.get("role") not in ["admin", "doctor"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not enough permissions"
+        )
+    
+    # Check if patient exists
+    patient = patients_collection.find_one({"_id": ObjectId(patient_id)})
+    if not patient:
+        raise HTTPException(status_code=404, detail="Patient not found")
+    
+    prescriptions_list = []
+    for prescription in prescriptions_collection.find({"patient_id": patient_id}).sort("created_at", -1):
+        prescription["id"] = str(prescription.pop("_id"))
+        prescriptions_list.append(prescription)
+    
+    return prescriptions_list
+
+@router.get("/{patient_id}/vital-signs", response_model=List[VitalSigns])
+async def get_patient_vital_signs(
+    patient_id: str,
+    current_user: dict = Depends(get_current_active_user)
+):
+    """Get all vital signs for a specific patient"""
+    # Check if current user has permission
+    if current_user.get("role") not in ["admin", "doctor"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not enough permissions"
+        )
+    
+    # Check if patient exists
+    patient = patients_collection.find_one({"_id": ObjectId(patient_id)})
+    if not patient:
+        raise HTTPException(status_code=404, detail="Patient not found")
+    
+    vital_signs_list = []
+    for vital_signs in vital_signs_collection.find({"patient_id": patient_id}).sort("created_at", -1):
+        if vital_signs.get("data") and len(vital_signs.get("data", [])) > 0:
+            vital_signs["id"] = str(vital_signs.pop("_id"))
+            vital_signs_list.append(vital_signs)
+    
+    return vital_signs_list
+
+@router.get("/{patient_id}/dietetic-orders", response_model=List[DietticOrder])
+async def get_patient_dietetic_orders(
+    patient_id: str,
+    current_user: dict = Depends(get_current_active_user)
+):
+    """Get all dietetic orders for a specific patient"""
+    # Check if current user has permission
+    if current_user.get("role") not in ["admin", "doctor"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not enough permissions"
+        )
+    
+    # Check if patient exists
+    patient = patients_collection.find_one({"_id": ObjectId(patient_id)})
+    if not patient:
+        raise HTTPException(status_code=404, detail="Patient not found")
+    
+    dietetic_orders_list = []
+    for order in dietetic_orders_collection.find({"patient_id": patient_id}).sort("created_at", -1):
+        order["id"] = str(order.pop("_id"))
+        dietetic_orders_list.append(order)
+    
+    return dietetic_orders_list
+
+@router.get("/{patient_id}/documents", response_model=List[Document])
+async def get_patient_documents(
+    patient_id: str,
+    current_user: dict = Depends(get_current_active_user)
+):
+    """Get all documents for a specific patient"""
+    # Check if current user has permission
+    if current_user.get("role") not in ["admin", "doctor"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not enough permissions"
+        )
+    
+    # Check if patient exists
+    patient = patients_collection.find_one({"_id": ObjectId(patient_id)})
+    if not patient:
+        raise HTTPException(status_code=404, detail="Patient not found")
+    
+    documents_list = []
+    for doc in documents_collection.find({"patient_id": patient_id}).sort("created_at", -1):
+        doc["id"] = str(doc.pop("_id"))
+        documents_list.append(doc)
+    
+    return documents_list
+
+@router.get("/{patient_id}/doctors")
+async def get_patient_doctors(
+    patient_id: str,
+    current_user: dict = Depends(get_current_active_user)
+):
+    """Get all doctors associated with a specific patient"""
+    # Check if current user has permission
+    if current_user.get("role") not in ["admin", "doctor"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not enough permissions"
+        )
+    
+    # Check if patient exists
+    patient = patients_collection.find_one({"_id": ObjectId(patient_id)})
+    if not patient:
+        raise HTTPException(status_code=404, detail="Patient not found")
+    
+    doctors = patient.get("doctors", [])
+    
+    # Get unique doctor certificates and their details
+    unique_doctors = {}
+    for doctor in doctors:
+        cert = doctor.get("professional_certificate")
+        if cert and cert not in unique_doctors:
+            unique_doctors[cert] = {
+                "professional_certificate": cert,
+                "sign_date": doctor.get("sign_date"),
+                "total_interactions": 1
+            }
+        elif cert:
+            unique_doctors[cert]["total_interactions"] += 1
+    
+    return list(unique_doctors.values())

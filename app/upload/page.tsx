@@ -7,14 +7,14 @@ export default function UploadPage() {
     <div className="flex flex-col gap-8">
       <div>
         <h1 className="text-3xl font-bold">Subir Archivos</h1>
-        <p className="text-muted-foreground">Subir registros médicos de pacientes para su procesamiento</p>
+        <p className="text-muted-foreground">Subir registros médicos para procesamiento automático e extracción de datos</p>
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
         <Card className="col-span-1">
           <CardHeader>
             <CardTitle>Subir Registros Médicos</CardTitle>
-            <CardDescription>Formatos soportados: PDF, JPEG, PNG (.pdf, .jpg, .jpeg, .png)</CardDescription>
+            <CardDescription>Procesamiento automático con extracción de datos médicos</CardDescription>
           </CardHeader>
           <CardContent>
             <FileUploader />
@@ -23,17 +23,17 @@ export default function UploadPage() {
 
         <Card className="col-span-1">
           <CardHeader>
-            <CardTitle>Directrices de Carga</CardTitle>
-            <CardDescription>Por favor, asegúrese de que todos los archivos cumplan con los siguientes requisitos</CardDescription>
+            <CardTitle>Procesamiento Automático</CardTitle>
+            <CardDescription>El sistema extraerá automáticamente la siguiente información</CardDescription>
           </CardHeader>
           <CardContent>
             <ul className="list-disc pl-5 space-y-2">
-              <li>Tamaño máximo de archivo: 50MB por archivo</li>
-              <li>Los documentos deben ser legibles y no estar protegidos con contraseña</li>
-              <li>La información del paciente debe ser claramente visible</li>
-              <li>Cada archivo debe contener registros de un solo paciente</li>
-              <li>No suba archivos que contengan imágenes médicas como radiografías o tomografías directamente</li>
-              <li>Oculte o elimine cualquier información personal sensible no relevante para el tratamiento</li>
+              <li>Información del paciente (nombres, apellidos, fecha de nacimiento, HIM)</li>
+              <li>Datos del médico tratante y cédula profesional</li>
+              <li>Signos vitales y mediciones clínicas</li>
+              <li>Prescripciones médicas y medicamentos</li>
+              <li>Órdenes dietéticas y recomendaciones nutricionales</li>
+              <li>Notas médicas y observaciones clínicas</li>
             </ul>
           </CardContent>
         </Card>
@@ -41,8 +41,8 @@ export default function UploadPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Cargas Pendientes</CardTitle>
-          <CardDescription>Archivos subidos y en espera de procesamiento</CardDescription>
+          <CardTitle>Documentos Subidos</CardTitle>
+          <CardDescription>Archivos subidos y su estado de procesamiento</CardDescription>
         </CardHeader>
         <CardContent>
           <PendingUploads />

@@ -29,7 +29,7 @@ class Patient(PatientBase):
     id: Optional[str] = Field(None, alias="id")
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
-    doctors: Optional[List[str]] = None # Professional Certificate Number of each doctor that has attended the patient
+    doctors: Optional[List[dict]] = None # Professional Certificate Number of each doctor that has attended the patient
 
 class PatientUpdate(BaseModel):
     full_name: Optional[str] = None

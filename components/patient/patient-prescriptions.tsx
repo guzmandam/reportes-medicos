@@ -3,7 +3,9 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Pill, Calendar, User, FileText } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Pill, Calendar, User, FileText, Search, X } from 'lucide-react';
 import api from '@/lib/axios';
 import { Prescription } from '@/types/patient';
 
@@ -15,20 +17,44 @@ export default function PatientPrescriptions({ patientId }: PatientPrescriptions
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Search and filter states
+  const [searchTerm, setSearchTerm] = useState('');
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [isFiltering, setIsFiltering] = useState(false);
+
+  const fetchPrescriptions = async (medicationName?: string, startDateFilter?: string, endDateFilter?: string) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Build query parameters
+      const params = new URLSearchParams();
+      if (medicationName && medicationName.trim()) {
+        params.append('medication_name', medicationName.trim());
+      }
+      if (startDateFilter) {
+        params.append('start_date', startDateFilter);
+      }
+      if (endDateFilter) {
+        params.append('end_date', endDateFilter);
+      }
+      
+      const queryString = params.toString();
+      const url = `/patients/${patientId}/prescriptions${queryString ? `?${queryString}` : ''}`;
+      
+      const response = await api.get(url);
+      setPrescriptions(response.data);
+    } catch (error: any) {
+      console.error('Error fetching prescriptions:', error);
+      setError(error?.response?.data?.detail || error?.message || 'Error desconocido');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchPrescriptions = async () => {
-      try {
-        const response = await api.get(`/patients/${patientId}/prescriptions`);
-        setPrescriptions(response.data);
-      } catch (error: any) {
-        console.error('Error fetching prescriptions:', error);
-        setError(error?.response?.data?.detail || error?.message || 'Error desconocido');
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchPrescriptions();
   }, [patientId]);
 
@@ -40,6 +66,25 @@ export default function PatientPrescriptions({ patientId }: PatientPrescriptions
       hour: '2-digit',
       minute: '2-digit'
     });
+  };
+
+  const handleSearch = async () => {
+    setIsFiltering(true);
+    await fetchPrescriptions(searchTerm, startDate, endDate);
+    setIsFiltering(false);
+  };
+
+  const handleClearFilters = async () => {
+    setSearchTerm('');
+    setStartDate('');
+    setEndDate('');
+    setIsFiltering(true);
+    await fetchPrescriptions();
+    setIsFiltering(false);
+  };
+
+  const formatDateForInput = (date: Date) => {
+    return date.toISOString().slice(0, 16);
   };
 
   const getMedicationFromData = (data: any) => {
@@ -69,7 +114,7 @@ export default function PatientPrescriptions({ patientId }: PatientPrescriptions
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Pill className="h-5 w-5" />
-            Recetas Médicas
+            Medicamentos
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -93,7 +138,7 @@ export default function PatientPrescriptions({ patientId }: PatientPrescriptions
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Pill className="h-5 w-5" />
-            Recetas Médicas
+            Medicamentos
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -110,15 +155,109 @@ export default function PatientPrescriptions({ patientId }: PatientPrescriptions
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Pill className="h-5 w-5" />
-          Recetas Médicas
+          Medicamentos
           <Badge variant="secondary">{prescriptions.length}</Badge>
         </CardTitle>
+        
+        {/* Search and Filter Section */}
+        <div className="space-y-4 pt-4">
+          <div className="flex flex-col gap-4">
+            {/* Search by medication name */}
+            <div className="flex gap-2">
+              <div className="flex-1">
+                <Input
+                  placeholder="Buscar medicamento..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                />
+              </div>
+              <Button 
+                onClick={handleSearch} 
+                disabled={isFiltering}
+                size="sm"
+              >
+                <Search className="h-4 w-4" />
+              </Button>
+            </div>
+            
+            {/* Date filters */}
+            <div className="flex flex-col sm:flex-row gap-2">
+              <div className="flex-1">
+                <label className="text-sm font-medium text-gray-700 block mb-1">
+                  Fecha desde:
+                </label>
+                <Input
+                  type="datetime-local"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                />
+              </div>
+              <div className="flex-1">
+                <label className="text-sm font-medium text-gray-700 block mb-1">
+                  Fecha hasta:
+                </label>
+                <Input
+                  type="datetime-local"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                />
+              </div>
+            </div>
+            
+            {/* Action buttons */}
+            <div className="flex gap-2">
+              <Button 
+                onClick={handleSearch} 
+                disabled={isFiltering}
+                size="sm"
+                className="flex-1 sm:flex-none"
+              >
+                {isFiltering ? 'Buscando...' : 'Aplicar Filtros'}
+              </Button>
+              {(searchTerm || startDate || endDate) && (
+                <Button 
+                  onClick={handleClearFilters} 
+                  variant="outline"
+                  disabled={isFiltering}
+                  size="sm"
+                  className="flex-1 sm:flex-none"
+                >
+                  <X className="h-4 w-4 mr-1" />
+                  Limpiar
+                </Button>
+              )}
+            </div>
+          </div>
+          
+          {/* Show active filters */}
+          {(searchTerm || startDate || endDate) && (
+            <div className="flex flex-wrap gap-2 pt-2 border-t">
+              <span className="text-sm text-gray-500">Filtros activos:</span>
+              {searchTerm && (
+                <Badge variant="outline" className="text-xs">
+                  Medicamento: {searchTerm}
+                </Badge>
+              )}
+              {startDate && (
+                <Badge variant="outline" className="text-xs">
+                  Desde: {new Date(startDate).toLocaleDateString('es-ES')}
+                </Badge>
+              )}
+              {endDate && (
+                <Badge variant="outline" className="text-xs">
+                  Hasta: {new Date(endDate).toLocaleDateString('es-ES')}
+                </Badge>
+              )}
+            </div>
+          )}
+        </div>
       </CardHeader>
       <CardContent>
         {prescriptions.length === 0 ? (
           <div className="text-center py-8">
             <Pill className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500">No hay recetas médicas registradas</p>
+            <p className="text-gray-500">No hay medicamentos registrados</p>
           </div>
         ) : (
           <div className="space-y-6">

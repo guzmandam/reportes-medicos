@@ -223,9 +223,12 @@ async def get_patient_notes(
 @router.get("/{patient_id}/prescriptions", response_model=List[Prescription])
 async def get_patient_prescriptions(
     patient_id: str,
+    medication_name: Optional[str] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
     current_user: dict = Depends(get_current_active_user)
 ):
-    """Get all prescriptions for a specific patient"""
+    """Get all prescriptions for a specific patient with optional filters"""
     # Check if current user has permission
     if current_user.get("role") not in ["admin", "doctor"]:
         raise HTTPException(
@@ -238,9 +241,51 @@ async def get_patient_prescriptions(
     if not patient:
         raise HTTPException(status_code=404, detail="Patient not found")
     
+    # Build the MongoDB query
+    query = {"patient_id": patient_id}
+    
+    # Add date filter if provided
+    if start_date or end_date:
+        date_filter = {}
+        if start_date:
+            try:
+                start_datetime = datetime.fromisoformat(start_date.replace('Z', '+00:00'))
+                date_filter["$gte"] = start_datetime
+            except ValueError:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Invalid start_date format. Use ISO format (YYYY-MM-DDTHH:MM:SS)"
+                )
+        if end_date:
+            try:
+                end_datetime = datetime.fromisoformat(end_date.replace('Z', '+00:00'))
+                date_filter["$lte"] = end_datetime
+            except ValueError:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Invalid end_date format. Use ISO format (YYYY-MM-DDTHH:MM:SS)"
+                )
+        query["created_at"] = date_filter
+    
+    # Execute the query
+    prescriptions_cursor = prescriptions_collection.find(query).sort("created_at", -1)
+    
     prescriptions_list = []
-    for prescription in prescriptions_collection.find({"patient_id": patient_id}).sort("created_at", -1):
+    for prescription in prescriptions_cursor:
         prescription["id"] = str(prescription.pop("_id"))
+        
+        # Filter by medication name if provided
+        if medication_name:
+            medication_found = False
+            if prescription.get("data") and isinstance(prescription["data"], list):
+                for med in prescription["data"]:
+                    med_name = med.get("Medicamento", "").lower()
+                    if medication_name.lower() in med_name:
+                        medication_found = True
+                        break
+            if not medication_found:
+                continue
+        
         prescriptions_list.append(prescription)
     
     return prescriptions_list

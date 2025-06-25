@@ -102,7 +102,7 @@ export default function PatientProfilePage() {
         <TabsList className="grid w-full grid-cols-5">
           <TabsTrigger value="prescriptions" className="flex items-center gap-2">
             <Pill className="h-4 w-4" />
-            Recetas
+            Medicamentos
           </TabsTrigger>
           <TabsTrigger value="notes" className="flex items-center gap-2">
             <FileText className="h-4 w-4" />

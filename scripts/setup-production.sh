@@ -11,7 +11,6 @@ echo "🚀 Setting up Medical Records Application for Production..."
 echo "📁 Creating directory structure..."
 mkdir -p secrets
 mkdir -p /opt/medical_records/data/{mongodb,uploads}
-mkdir -p nginx/ssl
 mkdir -p logs
 
 # Generate secure secrets
@@ -31,18 +30,9 @@ echo "mongodb://${MONGO_USER}:${MONGO_PASS}@mongodb:27017/medical_records?authSo
 
 echo "✅ Secrets generated successfully!"
 
-# Generate self-signed SSL certificate (replace with real certificates in production)
-echo "🔒 Generating SSL certificates..."
-if [ ! -f nginx/ssl/cert.pem ]; then
-    openssl req -x509 -newkey rsa:4096 -keyout nginx/ssl/key.pem -out nginx/ssl/cert.pem -days 365 -nodes \
-        -subj "/C=US/ST=State/L=City/O=Organization/CN=localhost"
-    echo "⚠️  WARNING: Using self-signed certificate. Replace with proper SSL certificates for production!"
-fi
-
 # Set proper permissions
 echo "🔧 Setting permissions..."
 chmod 600 secrets/*
-chmod 600 nginx/ssl/*
 chmod -R 755 /opt/medical_records/data
 
 # Create environment file for production
@@ -144,8 +134,8 @@ docker stats --no-stream --format "table {{.Container}}\t{{.CPUPerc}}\t{{.MemUsa
 
 echo
 echo "🌐 Health Checks:"
-curl -s http://localhost/health | jq . || echo "Backend health check failed"
-curl -s http://localhost/api/health | jq . || echo "Frontend health check failed"
+curl -s http://localhost:4081/health | jq . || echo "Backend health check failed"
+curl -s http://localhost:4080/api/health | jq . || echo "Frontend health check failed"
 
 echo
 echo "📊 Log Summary (last 10 lines):"
@@ -210,10 +200,8 @@ echo "✅ Production setup completed!"
 echo ""
 echo "📋 Next steps:"
 echo "1. Review and update secrets in ./secrets/ directory"
-echo "2. Replace SSL certificates in ./nginx/ssl/ with proper ones"
-echo "3. Update domain names in nginx configuration"
-echo "4. Run: docker-compose -f docker-compose.prod.yml up -d"
-echo "5. Monitor: ./scripts/monitor.sh"
+echo "2. Run: docker-compose -f docker-compose.prod.yml up -d"
+echo "3. Monitor: ./scripts/monitor.sh"
 echo ""
 echo "🔧 Management commands:"
 echo "- Start:   sudo systemctl start medical-records"
@@ -224,7 +212,6 @@ echo "- Deploy:  ./scripts/deploy.sh"
 echo ""
 echo "⚠️  Remember to:"
 echo "- Change default passwords"
-echo "- Use proper SSL certificates"
 echo "- Configure firewall rules"
 echo "- Set up log rotation"
 echo "- Configure monitoring alerts"

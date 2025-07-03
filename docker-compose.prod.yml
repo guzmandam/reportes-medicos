@@ -42,8 +42,7 @@ services:
   backend:
     build:
       context: .
-      dockerfile: Dockerfile.backend
-      target: production  # We'll add multi-stage build
+      dockerfile: Dockerfile.backend.prod
     container_name: medical_records_backend_prod
     restart: always
     ports:
@@ -89,9 +88,7 @@ services:
   frontend:
     build:
       context: .
-      dockerfile: Dockerfile.frontend
-      args:
-        - NODE_ENV=production
+      dockerfile: Dockerfile.frontend.prod
     container_name: medical_records_frontend_prod
     restart: always
     ports:
@@ -125,43 +122,7 @@ services:
         max-size: "10m"
         max-file: "3"
 
-  # Nginx reverse proxy (production best practice)
-  nginx:
-    image: nginx:1.25-alpine
-    container_name: medical_records_nginx_prod
-    restart: always
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
-      - ./nginx/ssl:/etc/nginx/ssl:ro
-      - nginx_logs:/var/log/nginx
-    depends_on:
-      frontend:
-        condition: service_healthy
-      backend:
-        condition: service_healthy
-    networks:
-      - medical_records_network
-    deploy:
-      resources:
-        limits:
-          memory: 128M
-          cpus: '0.2'
-        reservations:
-          memory: 64M
-          cpus: '0.1'
-    healthcheck:
-      test: ["CMD", "nginx", "-t"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-    logging:
-      driver: "json-file"
-      options:
-        max-size: "10m"
-        max-file: "3"
+
 
 # Secrets management
 secrets:
@@ -187,8 +148,6 @@ volumes:
       type: none
       o: bind
       device: /opt/medical_records/data/uploads
-  nginx_logs:
-    driver: local
 
 networks:
   medical_records_network:

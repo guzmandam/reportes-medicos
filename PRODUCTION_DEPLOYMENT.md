@@ -5,11 +5,10 @@ This guide covers deploying the Medical Records Application in a production envi
 ## 🏗️ Architecture Overview
 
 ```
-Internet
+VM External Access
     ↓
-[Nginx Reverse Proxy] (Port 80/443)
-    ↓
-[Frontend Container] (Port 3000) ← [Backend Container] (Port 8000)
+Port 4080 → [Frontend Container] (Port 3000)
+Port 4081 → [Backend Container] (Port 8000)
     ↓                                      ↓
 [MongoDB Container] (Internal) ← [Internal Network]
 ```
@@ -42,9 +41,7 @@ reportes-medicos/
 ├── Dockerfile.backend          # Development backend
 ├── Dockerfile.frontend.prod    # Production frontend (optimized)
 ├── Dockerfile.backend.prod     # Production backend (optimized)
-├── nginx/
-│   ├── nginx.conf             # Production Nginx config
-│   └── ssl/                   # SSL certificates
+
 ├── secrets/                   # Secret files (auto-generated)
 ├── scripts/
 │   ├── setup-production.sh    # Initial setup
@@ -71,14 +68,9 @@ reportes-medicos/
 3. **Network Security**
    - Internal container network
    - Only necessary ports exposed
-   - Nginx rate limiting
+   - Application-level rate limiting
 
-4. **SSL/TLS**
-   - HTTPS enforcement
-   - Modern TLS configuration
-   - Security headers
-
-5. **Application Security**
+4. **Application Security**
    - JWT token authentication
    - CORS configuration
    - Input validation
@@ -101,8 +93,8 @@ reportes-medicos/
 ## 🌐 Network Configuration
 
 ### Exposed Ports
-- **80**: HTTP (redirects to HTTPS)
-- **443**: HTTPS (Nginx reverse proxy)
+- **4080**: Frontend (Next.js application)
+- **4081**: Backend (FastAPI application)
 
 ### Internal Services
 - **Frontend**: 3000 (internal)
@@ -111,11 +103,11 @@ reportes-medicos/
 
 ### Security Groups/Firewall Rules
 ```bash
-# Allow HTTPS traffic
-sudo ufw allow 443/tcp
+# Allow Frontend traffic
+sudo ufw allow 4080/tcp
 
-# Allow HTTP traffic (for redirects)
-sudo ufw allow 80/tcp
+# Allow Backend API traffic
+sudo ufw allow 4081/tcp
 
 # Block all other external access
 sudo ufw default deny incoming
@@ -125,8 +117,8 @@ sudo ufw default allow outgoing
 ## 📊 Monitoring & Health Checks
 
 ### Health Endpoints
-- **Frontend**: `https://localhost/api/health`
-- **Backend**: `https://localhost/health`
+- **Frontend**: `http://localhost:4080/api/health`
+- **Backend**: `http://localhost:4081/health`
 - **Overall Status**: `./scripts/monitor.sh`
 
 ### Log Monitoring
@@ -137,8 +129,7 @@ docker-compose -f docker-compose.prod.yml logs
 # Follow specific service logs
 docker-compose -f docker-compose.prod.yml logs -f backend
 
-# View Nginx access logs
-docker exec medical_records_nginx_prod tail -f /var/log/nginx/access.log
+
 ```
 
 ### Resource Monitoring
@@ -227,17 +218,12 @@ Production environment variables are managed through:
 - `.env.production` - Non-sensitive configuration
 - `secrets/` directory - Sensitive data
 
-### SSL Certificates
+### Application Configuration
 
-Replace self-signed certificates with proper ones:
-```bash
-# Place your certificates
-cp your-cert.pem nginx/ssl/cert.pem
-cp your-key.pem nginx/ssl/key.pem
-
-# Restart Nginx
-docker-compose -f docker-compose.prod.yml restart nginx
-```
+The application runs with HTTP on the specified ports. For HTTPS in production, consider:
+- Using a reverse proxy like Cloudflare
+- Adding SSL termination at the VM level
+- Using Let's Encrypt with certbot
 
 ### Database Configuration
 
@@ -252,13 +238,12 @@ MongoDB is configured with:
 - **Frontend**: 256MB RAM, 0.3 CPU
 - **Backend**: 512MB RAM, 0.5 CPU
 - **MongoDB**: 1GB RAM, 0.5 CPU
-- **Nginx**: 128MB RAM, 0.2 CPU
 
-### Nginx Optimizations
-- Gzip compression
-- Static asset caching
-- Connection keep-alive
-- Rate limiting
+### Application Optimizations
+- Next.js production build with compression
+- FastAPI with multiple workers
+- Static asset optimization
+- Database connection pooling
 
 ### Database Optimizations
 - Indexes on frequently queried fields
@@ -278,13 +263,14 @@ MongoDB is configured with:
    docker stats
    ```
 
-2. **SSL certificate errors**
+2. **Port connectivity issues**
    ```bash
-   # Verify certificate
-   openssl x509 -in nginx/ssl/cert.pem -text -noout
+   # Test port connectivity
+   curl -I http://localhost:4080
+   curl -I http://localhost:4081
    
-   # Test SSL configuration
-   curl -I https://localhost
+   # Check if ports are open
+   netstat -tulpn | grep -E '4080|4081'
    ```
 
 3. **Database connection issues**
@@ -308,8 +294,8 @@ MongoDB is configured with:
 
 ```bash
 # Check individual services
-curl -f http://localhost/health
-curl -f http://localhost/api/health
+curl -f http://localhost:4081/health
+curl -f http://localhost:4080/api/health
 
 # Restart unhealthy services
 docker-compose -f docker-compose.prod.yml restart backend

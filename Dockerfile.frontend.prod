@@ -13,12 +13,12 @@ RUN adduser --system --uid 1001 nextjs
 
 WORKDIR /app
 
-# Dependencies stage
+# Dependencies stage - install ALL dependencies for build
 FROM base AS deps
 # Copy package files
 COPY package.json package-lock.json* ./
-# Install dependencies
-RUN npm ci --only=production --legacy-peer-deps && npm cache clean --force
+# Install all dependencies (including devDependencies needed for build)
+RUN npm ci --legacy-peer-deps && npm cache clean --force
 
 # Build stage
 FROM base AS builder
@@ -35,6 +35,13 @@ ENV NEXT_PRIVATE_STANDALONE=true
 # Build the application
 RUN npm run build
 
+# Production dependencies stage - only runtime dependencies
+FROM base AS production-deps
+WORKDIR /app
+COPY package.json package-lock.json* ./
+# Install only production dependencies for runtime
+RUN npm ci --legacy-peer-deps && npm cache clean --force
+
 # Production runner stage
 FROM base AS runner
 WORKDIR /app
@@ -43,7 +50,7 @@ ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_OPTIONS="--max-old-space-size=256"
 
-# Copy necessary files
+# Copy built application
 COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static

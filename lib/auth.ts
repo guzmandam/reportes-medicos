@@ -34,7 +34,7 @@ export interface JwtPayload {
   [key: string]: any;
 }
 
-const API_URL = `http://backend:8000/api/v1`
+const API_URL = `http://132.248.51.138:8000/api/v1`
 
 // Check if token is close to expiration (less than 5 minutes remaining)
 export const isTokenExpiringSoon = (token: string): boolean => {

@@ -3,7 +3,7 @@ version: '3.3'
 services:
   # Database service (internal only, not exposed)
   mongodb:
-    image: mongo:7.0  # Use specific version, not latest
+    image: mongo:4.4  # Use specific version, not latest
     container_name: medical_records_mongo_prod
     restart: always
     environment:
@@ -16,11 +16,6 @@ services:
     networks:
       - medical_records_network
 
-    healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
     logging:
       driver: "json-file"
       options:
@@ -49,11 +44,6 @@ services:
     networks:
       - medical_records_network
 
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
     logging:
       driver: "json-file"
       options:
@@ -78,11 +68,6 @@ services:
     networks:
       - medical_records_network
 
-    healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000/api/health"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
     logging:
       driver: "json-file"
       options:

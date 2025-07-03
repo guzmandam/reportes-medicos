@@ -48,10 +48,6 @@ RUN apt-get update \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-# Add health check endpoint
-RUN echo '#!/bin/bash\ncurl -f http://localhost:8000/health || exit 1' > /app/healthcheck.sh \
-    && chmod +x /app/healthcheck.sh
-
 # Switch to non-root user
 USER appuser
 

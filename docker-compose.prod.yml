@@ -1,4 +1,4 @@
-version: '3.8'
+version: '3.3'
 
 services:
   # Database service (internal only, not exposed)
@@ -31,7 +31,6 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s
     logging:
       driver: "json-file"
       options:
@@ -45,8 +44,7 @@ services:
       dockerfile: Dockerfile.backend.prod
     container_name: medical_records_backend_prod
     restart: always
-    ports:
-      - "81:8000"
+
     environment:
       - MONGODB_URL_FILE=/run/secrets/mongodb_url
       - JWT_SECRET_KEY_FILE=/run/secrets/jwt_secret
@@ -57,8 +55,7 @@ services:
     volumes:
       - uploads_data:/app/uploads
     depends_on:
-      mongodb:
-        condition: service_healthy
+      - mongodb
     networks:
       - medical_records_network
     secrets:
@@ -77,7 +74,6 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s
     logging:
       driver: "json-file"
       options:
@@ -95,11 +91,10 @@ services:
       - "80:3000"
     environment:
       - NODE_ENV=production
-      - NEXT_PUBLIC_API_URL=http://localhost:4081
+      - NEXT_PUBLIC_API_URL=http://backend:8000
       - HOSTNAME=0.0.0.0
     depends_on:
-      backend:
-        condition: service_healthy
+      - backend
     networks:
       - medical_records_network
     deploy:
@@ -115,7 +110,6 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
-      start_period: 40s
     logging:
       driver: "json-file"
       options:

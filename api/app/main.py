@@ -4,6 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from .core.config import get_settings
 from .core.init_db import init_db
 from .api.api_v1.api import api_router
+from .api.api_v1.health import router as health_router
 
 app = FastAPI(title="Medical Records API")
 settings = get_settings()
@@ -11,7 +12,11 @@ settings = get_settings()
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],  # Add your frontend URL
+    allow_origins=[
+        "http://localhost:3000",  # Local development
+        "http://localhost:4080",  # Docker frontend
+        "http://frontend:3000",   # Docker internal communication
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -19,6 +24,7 @@ app.add_middleware(
 
 # Include all routers from the API
 app.include_router(api_router, prefix="/api/v1")
+app.include_router(health_router)
 
 @app.get("/")
 async def root():

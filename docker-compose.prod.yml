@@ -46,7 +46,7 @@ services:
     container_name: medical_records_backend_prod
     restart: always
     ports:
-      - "4081:8000"
+      - "81:8000"
     environment:
       - MONGODB_URL_FILE=/run/secrets/mongodb_url
       - JWT_SECRET_KEY_FILE=/run/secrets/jwt_secret
@@ -92,7 +92,7 @@ services:
     container_name: medical_records_frontend_prod
     restart: always
     ports:
-      - "4080:3000"
+      - "80:3000"
     environment:
       - NODE_ENV=production
       - NEXT_PUBLIC_API_URL=http://localhost:4081

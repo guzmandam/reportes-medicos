@@ -39,6 +39,8 @@ services:
       - ENVIRONMENT=production
     volumes:
       - uploads_data:/app/uploads
+    ports:
+      - "81:8000"
     depends_on:
       - mongodb
     networks:

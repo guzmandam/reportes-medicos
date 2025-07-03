@@ -2,7 +2,7 @@ import axios from 'axios'
 import Cookies from 'js-cookie'
 
 const api = axios.create({
-  baseURL: 'http://132.248.51.138:8000/api/v1'
+  baseURL: 'http://132.248.51.138:4081/api/v1'
 })
 
 // Request interceptor to add JWT token

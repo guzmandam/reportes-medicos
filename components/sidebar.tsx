@@ -41,18 +41,18 @@ const routes = [
     icon: UsersIcon,
     allowedRoles: ['admin']
   },
-  {
-    path: "/roles",
-    name: "Roles",
-    icon: UserGroupIcon,
-    allowedRoles: ['admin']
-  },
-  {
-    path: "/settings",
-    name: "Configuración",
-    icon: Cog6ToothIcon,
-    allowedRoles: ['admin']
-  },
+  // {
+  //   path: "/roles",
+  //   name: "Roles",
+  //   icon: UserGroupIcon,
+  //   allowedRoles: ['admin']
+  // },
+  // {
+  //   path: "/settings",
+  //   name: "Configuración",
+  //   icon: Cog6ToothIcon,
+  //   allowedRoles: ['admin']
+  // },
 ]
 
 export default function Sidebar() {

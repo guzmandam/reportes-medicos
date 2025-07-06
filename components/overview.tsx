@@ -2,45 +2,54 @@
 
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip } from "recharts"
 
-const data = [
+interface OverviewProps {
+  data?: Array<{
+    name: string
+    uploads: number
+    processed: number
+  }>
+}
+
+// Fallback data for when no data is provided
+const fallbackData = [
   {
     name: "Mon",
-    uploads: 132,
-    processed: 121,
+    uploads: 0,
+    processed: 0,
   },
   {
     name: "Tue",
-    uploads: 187,
-    processed: 178,
+    uploads: 0,
+    processed: 0,
   },
   {
     name: "Wed",
-    uploads: 155,
-    processed: 149,
+    uploads: 0,
+    processed: 0,
   },
   {
     name: "Thu",
-    uploads: 194,
-    processed: 182,
+    uploads: 0,
+    processed: 0,
   },
   {
     name: "Fri",
-    uploads: 246,
-    processed: 223,
+    uploads: 0,
+    processed: 0,
   },
   {
     name: "Sat",
-    uploads: 78,
-    processed: 65,
+    uploads: 0,
+    processed: 0,
   },
   {
     name: "Sun",
-    uploads: 45,
-    processed: 42,
+    uploads: 0,
+    processed: 0,
   },
 ]
 
-export function Overview() {
+export function Overview({ data = fallbackData }: OverviewProps) {
   return (
     <ResponsiveContainer width="100%" height={350}>
       <BarChart data={data}>

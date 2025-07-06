@@ -3,55 +3,34 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 
-const uploads = [
+interface RecentUploadsProps {
+  data?: Array<{
+    id: string
+    filename: string
+    uploadedBy: string
+    status: string
+    time: string
+    avatar: string
+    initials: string
+  }>
+}
+
+// Fallback data for when no data is provided
+const fallbackUploads = [
   {
     id: "1",
-    filename: "patient_records_086532.pdf",
-    uploadedBy: "Dr. Sarah Chen",
-    status: "Completed",
-    time: "2 hours ago",
+    filename: "Sin cargas recientes",
+    uploadedBy: "Sistema",
+    status: "Info",
+    time: "N/A",
     avatar: "/placeholder.svg?height=32&width=32",
-    initials: "SC",
-  },
-  {
-    id: "2",
-    filename: "lab_results_A876522.pdf",
-    uploadedBy: "Dr. Mark Johnson",
-    status: "Processing",
-    time: "3 hours ago",
-    avatar: "/placeholder.svg?height=32&width=32",
-    initials: "MJ",
-  },
-  {
-    id: "3",
-    filename: "xray_scan_10945.pdf",
-    uploadedBy: "Dr. Lisa Williams",
-    status: "Pending",
-    time: "5 hours ago",
-    avatar: "/placeholder.svg?height=32&width=32",
-    initials: "LW",
-  },
-  {
-    id: "4",
-    filename: "medical_history_7653.pdf",
-    uploadedBy: "Dr. Robert Smith",
-    status: "Completed",
-    time: "Yesterday",
-    avatar: "/placeholder.svg?height=32&width=32",
-    initials: "RS",
-  },
-  {
-    id: "5",
-    filename: "ct_scan_results_08765.pdf",
-    uploadedBy: "Dr. Emily Jones",
-    status: "Error",
-    time: "Yesterday",
-    avatar: "/placeholder.svg?height=32&width=32",
-    initials: "EJ",
+    initials: "SY",
   },
 ]
 
-export function RecentUploads() {
+export function RecentUploads({ data = fallbackUploads }: RecentUploadsProps) {
+  const uploads = data.length > 0 ? data : fallbackUploads
+  
   return (
     <div className="space-y-4">
       {uploads.map((upload) => (
@@ -69,11 +48,11 @@ export function RecentUploads() {
           <div className="flex items-center gap-2">
             <Badge
               variant={
-                upload.status === "Completed"
+                upload.status === "Completed" || upload.status === "Analyzed"
                   ? "default"
                   : upload.status === "Processing"
                     ? "secondary"
-                    : upload.status === "Error"
+                    : upload.status === "Error" || upload.status === "Failed"
                       ? "destructive"
                       : "outline"
               }

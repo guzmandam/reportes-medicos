@@ -1,11 +1,11 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
-import { Edit, Key, Lock, MoreHorizontal, Search, Shield, Trash2 } from "lucide-react"
+import { Edit, Eye, Key, Lock, MoreHorizontal, Search, Shield, Trash2, UserPlus, Loader2, AlertCircle } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,125 +16,207 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Input } from "@/components/ui/input"
 import { Pagination } from "@/components/ui/pagination"
-
-const users = [
-  {
-    id: "U-12345",
-    name: "Dr. Sarah Chen",
-    email: "sarah.chen@example.com",
-    department: "Cardiology",
-    role: "Doctor",
-    status: "Active",
-    lastActive: "Today, 2:30 PM",
-    permissions: ["View Records", "Edit Records", "Upload Files"],
-    avatar: "/placeholder.svg?height=40&width=40",
-    initials: "SC",
-  },
-  {
-    id: "U-67890",
-    name: "Dr. Michael Brown",
-    email: "michael.brown@example.com",
-    department: "Neurology",
-    role: "Doctor",
-    status: "Active",
-    lastActive: "Today, 10:15 AM",
-    permissions: ["View Records", "Edit Records", "Upload Files"],
-    avatar: "/placeholder.svg?height=40&width=40",
-    initials: "MB",
-  },
-  {
-    id: "U-24680",
-    name: "Jennifer Lee",
-    email: "jennifer.lee@example.com",
-    department: "Administration",
-    role: "Admin",
-    status: "Active",
-    lastActive: "Today, 9:45 AM",
-    permissions: ["View Records", "Edit Records", "Upload Files", "Manage Users"],
-    avatar: "/placeholder.svg?height=40&width=40",
-    initials: "JL",
-  },
-  {
-    id: "U-13579",
-    name: "David Wilson",
-    email: "david.wilson@example.com",
-    department: "Oncology",
-    role: "Nurse",
-    status: "Inactive",
-    lastActive: "Yesterday, 4:20 PM",
-    permissions: ["View Records"],
-    avatar: "/placeholder.svg?height=40&width=40",
-    initials: "DW",
-  },
-  {
-    id: "U-97531",
-    name: "Lisa Garcia",
-    email: "lisa.garcia@example.com",
-    department: "Pediatrics",
-    role: "Doctor",
-    status: "Active",
-    lastActive: "Today, 1:05 PM",
-    permissions: ["View Records", "Edit Records", "Upload Files"],
-    avatar: "/placeholder.svg?height=40&width=40",
-    initials: "LG",
-  },
-  {
-    id: "U-86420",
-    name: "Robert Taylor",
-    email: "robert.taylor@example.com",
-    department: "Radiology",
-    role: "Technician",
-    status: "Active",
-    lastActive: "Yesterday, 3:30 PM",
-    permissions: ["View Records", "Upload Files"],
-    avatar: "/placeholder.svg?height=40&width=40",
-    initials: "RT",
-  },
-  {
-    id: "U-97532",
-    name: "Emily Martinez",
-    email: "emily.martinez@example.com",
-    department: "Administration",
-    role: "IT Support",
-    status: "Active",
-    lastActive: "Today, 11:45 AM",
-    permissions: ["View Records", "Manage Users", "System Admin"],
-    avatar: "/placeholder.svg?height=40&width=40",
-    initials: "EM",
-  },
-  {
-    id: "U-86421",
-    name: "James Johnson",
-    email: "james.johnson@example.com",
-    department: "General Practice",
-    role: "Doctor",
-    status: "Active",
-    lastActive: "Today, 9:15 AM",
-    permissions: ["View Records", "Edit Records", "Upload Files"],
-    avatar: "/placeholder.svg?height=40&width=40",
-    initials: "JJ",
-  },
-]
+import { usersApi, User } from "@/lib/users-api"
+import { useToast } from "@/hooks/use-toast"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { UserDetailsModal } from "@/components/user-details-modal"
+import { UserEditModal } from "@/components/user-edit-modal"
 
 export function UserManagement() {
+  const [users, setUsers] = useState<User[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState("")
+  const [selectedUser, setSelectedUser] = useState<User | null>(null)
+  const [showDetailsModal, setShowDetailsModal] = useState(false)
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [actionLoading, setActionLoading] = useState<string | null>(null)
+  const { toast } = useToast()
 
+  // Fetch users from API
+  const fetchUsers = async () => {
+    try {
+      setLoading(true)
+      setError(null)
+      const fetchedUsers = await usersApi.getUsers()
+      setUsers(fetchedUsers)
+    } catch (err: any) {
+      console.error('Error fetching users:', err)
+      setError(err?.response?.data?.detail || err?.message || 'Error desconocido')
+      toast({
+        title: "Error al cargar usuarios",
+        description: "No se pudieron cargar los usuarios. Por favor, intenta nuevamente.",
+        variant: "destructive",
+      })
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Load users on component mount
+  useEffect(() => {
+    fetchUsers()
+  }, [])
+
+  // Filter users based on search term
   const filteredUsers = users.filter(
     (user) =>
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.full_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.department.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.role.toLowerCase().includes(searchTerm.toLowerCase()),
+      user.role.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
+  // Helper functions
+  const getInitials = (fullName: string) => {
+    return fullName
+      .split(' ')
+      .map(name => name[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2)
+  }
+
+  const formatDate = (dateString: string) => {
+    try {
+      const date = new Date(dateString)
+      return date.toLocaleDateString('es-ES', {
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    } catch {
+      return dateString
+    }
+  }
+
+  const getRoleColor = (role: string) => {
+    switch (role.toLowerCase()) {
+      case 'admin':
+        return 'bg-red-100 text-red-800'
+      case 'doctor':
+        return 'bg-blue-100 text-blue-800'
+      case 'nurse':
+        return 'bg-green-100 text-green-800'
+      case 'user':
+        return 'bg-gray-100 text-gray-800'
+      default:
+        return 'bg-gray-100 text-gray-800'
+    }
+  }
+
+  const handleViewDetails = (user: User) => {
+    setSelectedUser(user)
+    setShowDetailsModal(true)
+  }
+
+  const handleEditUser = (user: User) => {
+    setSelectedUser(user)
+    setShowEditModal(true)
+  }
+
+  const handleUserUpdated = (updatedUser: User) => {
+    setUsers(users.map(user => 
+      user.id === updatedUser.id ? updatedUser : user
+    ))
+  }
+
+  const handleDeleteUser = async (userId: string) => {
+    if (!confirm('¿Estás seguro de que quieres eliminar este usuario? Esta acción no se puede deshacer.')) {
+      return
+    }
+
+    try {
+      setActionLoading(userId)
+      await usersApi.deleteUser(userId)
+      setUsers(users.filter(user => user.id !== userId))
+      toast({
+        title: "Usuario eliminado",
+        description: "El usuario ha sido eliminado exitosamente.",
+      })
+    } catch (err: any) {
+      console.error('Error deleting user:', err)
+      toast({
+        title: "Error al eliminar usuario",
+        description: err?.response?.data?.detail || "No se pudo eliminar el usuario.",
+        variant: "destructive",
+      })
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  const handleToggleStatus = async (userId: string, currentStatus: boolean) => {
+    try {
+      setActionLoading(userId)
+      const updatedUser = await usersApi.updateUser(userId, { is_active: !currentStatus })
+      setUsers(users.map(user => 
+        user.id === userId ? updatedUser : user
+      ))
+      toast({
+        title: "Estado actualizado",
+        description: `El usuario ha sido ${updatedUser.is_active ? 'activado' : 'desactivado'} exitosamente.`,
+      })
+    } catch (err: any) {
+      console.error('Error updating user status:', err)
+      toast({
+        title: "Error al actualizar estado",
+        description: err?.response?.data?.detail || "No se pudo actualizar el estado del usuario.",
+        variant: "destructive",
+      })
+    } finally {
+      setActionLoading(null)
+    }
+  }
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <div className="h-8 w-48 bg-muted animate-pulse rounded" />
+          <div className="h-10 w-32 bg-muted animate-pulse rounded" />
+        </div>
+        <div className="space-y-3">
+          {[1, 2, 3, 4, 5].map((i) => (
+            <div key={i} className="h-16 bg-muted animate-pulse rounded" />
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  // Error state
+  if (error && users.length === 0) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <AlertCircle className="h-5 w-5 text-destructive" />
+            Error al cargar usuarios
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-muted-foreground mb-4">
+            No se pudieron cargar los usuarios. Por favor, revisa tu conexión e intenta nuevamente.
+          </p>
+          <Button onClick={fetchUsers}>
+            Reintentar
+          </Button>
+        </CardContent>
+      </Card>
+    )
+  }
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 pt-4">
       <div className="flex items-center gap-2">
         <div className="relative flex-1">
           <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
           <Input
             type="search"
-            placeholder="Search by name, email, department, or role..."
+            placeholder="Buscar por nombre, email o rol..."
             className="pl-8"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -146,13 +228,11 @@ export function UserManagement() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>User</TableHead>
-              <TableHead>Department</TableHead>
-              <TableHead>Role</TableHead>
-              <TableHead>Last Active</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Permissions</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              <TableHead>Usuario</TableHead>
+              <TableHead>Rol</TableHead>
+              <TableHead>Fecha de Creación</TableHead>
+              <TableHead>Estado</TableHead>
+              <TableHead className="text-right">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -161,74 +241,76 @@ export function UserManagement() {
                 <TableCell>
                   <div className="flex items-center gap-3">
                     <Avatar>
-                      <AvatarImage src={user.avatar} />
-                      <AvatarFallback>{user.initials}</AvatarFallback>
+                      <AvatarImage src="/placeholder.svg?height=40&width=40" />
+                      <AvatarFallback>{getInitials(user.full_name)}</AvatarFallback>
                     </Avatar>
                     <div>
-                      <div className="font-medium">{user.name}</div>
+                      <div className="font-medium">{user.full_name}</div>
                       <div className="text-xs text-muted-foreground">{user.email}</div>
                     </div>
                   </div>
                 </TableCell>
-                <TableCell>{user.department}</TableCell>
-                <TableCell>{user.role}</TableCell>
-                <TableCell>{user.lastActive}</TableCell>
                 <TableCell>
-                  <Badge variant={user.status === "Active" ? "default" : "secondary"}>{user.status}</Badge>
+                  <Badge variant="outline" className={getRoleColor(user.role)}>
+                    {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                  </Badge>
                 </TableCell>
                 <TableCell>
-                  <div className="flex flex-wrap gap-1">
-                    {user.permissions.slice(0, 2).map((permission, index) => (
-                      <Badge key={index} variant="outline" className="text-xs">
-                        {permission}
-                      </Badge>
-                    ))}
-                    {user.permissions.length > 2 && (
-                      <Badge variant="outline" className="text-xs">
-                        +{user.permissions.length - 2} more
-                      </Badge>
-                    )}
+                  <div className="text-sm">
+                    {formatDate(user.created_at)}
                   </div>
+                </TableCell>
+                <TableCell>
+                  <Badge variant={user.is_active ? "default" : "secondary"}>
+                    {user.is_active ? "Activo" : "Inactivo"}
+                  </Badge>
                 </TableCell>
                 <TableCell className="text-right">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon">
-                        <MoreHorizontal className="h-4 w-4" />
+                      <Button 
+                        variant="ghost" 
+                        size="icon"
+                        disabled={actionLoading === user.id}
+                      >
+                        {actionLoading === user.id ? (
+                          <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                          <MoreHorizontal className="h-4 w-4" />
+                        )}
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                      <DropdownMenuLabel>Acciones</DropdownMenuLabel>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleViewDetails(user)}>
+                        <Eye className="mr-2 h-4 w-4" />
+                        <span>Ver Detalles</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleEditUser(user)}>
                         <Edit className="mr-2 h-4 w-4" />
-                        <span>Edit User</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <Shield className="mr-2 h-4 w-4" />
-                        <span>Manage Permissions</span>
-                      </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <Key className="mr-2 h-4 w-4" />
-                        <span>Reset Password</span>
+                        <span>Editar Usuario</span>
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem>
-                        {user.status === "Active" ? (
+                      <DropdownMenuItem onClick={() => handleToggleStatus(user.id, user.is_active)}>
+                        {user.is_active ? (
                           <>
                             <Lock className="mr-2 h-4 w-4" />
-                            <span>Disable Account</span>
+                            <span>Desactivar Cuenta</span>
                           </>
                         ) : (
                           <>
                             <Shield className="mr-2 h-4 w-4" />
-                            <span>Enable Account</span>
+                            <span>Activar Cuenta</span>
                           </>
                         )}
                       </DropdownMenuItem>
-                      <DropdownMenuItem className="text-destructive focus:text-destructive">
+                      <DropdownMenuItem 
+                        className="text-destructive focus:text-destructive"
+                        onClick={() => handleDeleteUser(user.id)}
+                      >
                         <Trash2 className="mr-2 h-4 w-4" />
-                        <span>Delete User</span>
+                        <span>Eliminar Usuario</span>
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -239,9 +321,30 @@ export function UserManagement() {
         </Table>
       </div>
 
-      <div className="flex items-center justify-end space-x-2 py-4">
-        <Pagination />
-      </div>
+      {/* TODO: Add pagination when needed */}
+      {filteredUsers.length === 0 && !loading && (
+        <div className="text-center py-8">
+          <p className="text-muted-foreground">
+            {searchTerm ? 'No se encontraron usuarios que coincidan con la búsqueda.' : 'No hay usuarios disponibles.'}
+          </p>
+        </div>
+      )}
+
+      {/* User Details Modal */}
+      <UserDetailsModal
+        user={selectedUser}
+        open={showDetailsModal}
+        onOpenChange={setShowDetailsModal}
+        onEdit={handleEditUser}
+      />
+
+      {/* User Edit Modal */}
+      <UserEditModal
+        user={selectedUser}
+        open={showEditModal}
+        onOpenChange={setShowEditModal}
+        onUserUpdated={handleUserUpdated}
+      />
     </div>
   )
 }

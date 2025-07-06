@@ -38,10 +38,6 @@ export default function UsersPage() {
         </div>
 
         <Card>
-          <CardHeader>
-            <CardTitle>Usuarios y Permisos</CardTitle>
-            <CardDescription>Gestionar acceso al sistema y roles de usuario</CardDescription>
-          </CardHeader>
           <CardContent>
             <UserManagement />
           </CardContent>

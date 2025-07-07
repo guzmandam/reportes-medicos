@@ -94,18 +94,18 @@ export default function PatientOverview({ patient }: PatientOverviewProps) {
                 <p className="text-sm text-gray-600">Signos Vitales</p>
               </div>
               
-              <div className="text-center p-4 bg-orange-50 rounded-lg">
+              {/* <div className="text-center p-4 bg-orange-50 rounded-lg">
                 <Utensils className="h-8 w-8 text-orange-600 mx-auto mb-2" />
                 <p className="text-2xl font-bold text-orange-600">{stats.dietticOrders}</p>
                 <p className="text-sm text-gray-600">Órdenes Dietéticas</p>
-              </div>
+              </div> */}
             </div>
           )}
         </CardContent>
       </Card>
 
       {/* Contact Information */}
-      <Card>
+      {/* <Card>
         <CardHeader>
           <CardTitle>Información de Contacto</CardTitle>
         </CardHeader>
@@ -164,7 +164,7 @@ export default function PatientOverview({ patient }: PatientOverviewProps) {
             </p>
           )}
         </CardContent>
-      </Card>
+      </Card> */}
     </div>
   );
 } 

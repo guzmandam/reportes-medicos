@@ -112,10 +112,10 @@ export default function PatientProfilePage() {
             <Activity className="h-4 w-4" />
             Signos Vitales
           </TabsTrigger>
-          <TabsTrigger value="dietetic" className="flex items-center gap-2">
+          {/* <TabsTrigger value="dietetic" className="flex items-center gap-2">
             <Utensils className="h-4 w-4" />
             Órdenes Dietéticas
-          </TabsTrigger>
+          </TabsTrigger> */}
           <TabsTrigger value="documents" className="flex items-center gap-2">
             <Stethoscope className="h-4 w-4" />
             Documentos

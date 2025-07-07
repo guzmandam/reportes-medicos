@@ -65,6 +65,50 @@ Un sistema moderno, seguro y fácil de usar para la gestión de registros médic
 
 5. Abrir [http://localhost:3000](http://localhost:3000) en tu navegador.
 
+## 🐳 Setup Backend con Docker (FastAPI + MongoDB)
+
+Para ejecutar el backend completo de forma rápida en un VM:
+
+### Opción 1: Setup Automático
+```bash
+chmod +x quick-setup.sh
+./quick-setup.sh
+```
+
+### Opción 2: Setup Manual
+```bash
+# Copiar archivo de entorno
+cp .env.example api/.env
+
+# Iniciar servicios (MongoDB + FastAPI + Mongo Express)
+docker-compose up -d --build
+```
+
+### Servicios Disponibles:
+- 🚀 **FastAPI Backend**: http://localhost:8000
+- 📖 **API Documentation**: http://localhost:8000/docs
+- 📊 **MongoDB**: localhost:27017
+- 🗄️ **Mongo Express**: http://localhost:8081 (admin/admin)
+
+### Credenciales por Defecto:
+- **Email**: `admin@example.com`
+- **Password**: `adminpassword`
+
+### Comandos Útiles:
+```bash
+# Ver logs
+docker-compose logs -f
+
+# Parar servicios
+docker-compose down
+
+# Reiniciar servicios
+docker-compose restart
+
+# Limpiar todo
+docker-compose down -v
+```
+
 ## Estructura del Proyecto
 
 ```

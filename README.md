@@ -109,6 +109,46 @@ docker-compose restart
 docker-compose down -v
 ```
 
+## 🌐 Setup Frontend con Docker (Next.js)
+
+Para ejecutar el frontend en Docker (ideal para VMs):
+
+### Setup Automático
+```bash
+chmod +x setup_frontend.sh
+./setup_frontend.sh
+```
+
+### Setup Manual
+```bash
+# Construir y ejecutar el frontend
+docker-compose -f docker-compose-frontend.yml up -d --build
+```
+
+### Servicios Disponibles:
+- 🌐 **Frontend**: http://localhost:3000
+
+### Comandos Útiles:
+```bash
+# Ver logs del frontend
+docker-compose -f docker-compose-frontend.yml logs -f
+
+# Parar frontend
+docker-compose -f docker-compose-frontend.yml down
+
+# Reiniciar frontend
+docker-compose -f docker-compose-frontend.yml restart
+```
+
+### 🖥️ Desarrollo Local (Alternativa)
+```bash
+# Instalar dependencias
+npm install
+
+# Ejecutar en modo desarrollo
+npm run dev
+```
+
 ## Estructura del Proyecto
 
 ```

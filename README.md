@@ -85,8 +85,8 @@ docker-compose up -d --build
 ```
 
 ### Servicios Disponibles:
-- 🚀 **FastAPI Backend**: http://localhost:8000
-- 📖 **API Documentation**: http://localhost:8000/docs
+- 🚀 **FastAPI Backend**: http://localhost:81
+- 📖 **API Documentation**: http://localhost:81/docs
 - 📊 **MongoDB**: localhost:27017
 - 🗄️ **Mongo Express**: http://localhost:8081 (admin/admin)
 
